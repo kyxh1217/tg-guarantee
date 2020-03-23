@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            font-size: 14px;
+            line-height: 1;
+            font-family: "SimSun", serif;
+        }
+
+        body * {
+            padding: 0;
+            margin: 0;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
+
+        .text-left {
+            text-align: left !important;
+        }
+
+        table {
+            background-color: #ffffff;
+            border-collapse: collapse;
+            border-spacing: 0;
+            table-layout: fixed;
+        }
+
+        tr {
+        }
+
+        .table-noborder {
+            border: none;
+            padding: 0;
+        }
+
+
+        .content-table {
+            border: 1px solid #000000;
+        }
+
+        .content-table td {
+            border-collapse: collapse;
+            border: 1px solid #000000;
+            text-align: center;
+        }
+
+        table input[type=text] {
+            width: 100%;
+            border: none;
+            text-align: center;
+            height: 20px;
+        }
+    </style>
+    <style media="print">
+        .no-print{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div style="width: 1030px;margin:0 auto;">
+    <div>
+        <table class="table-noborder" style="width: 1030px">
+            <tr>
+                <td style="width: 910px">
+                    <table class="table-noborder">
+                        <tr>
+                            <td style="width: 80px">
+                                <img style="width: 100%;vertical-align: bottom"
+                                     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIEAAABmCAYAAADs4fJqAAAgAElEQVR4nO2dA7QkydLHaxZvbXvWtm3bNs7aPmtjdta2bductWY9a9vs/PIXp//94uZW9b1dd+Z29/tunFOnGpVZWZnhiIzqEyJkvfD/GoZq9gB6ofnQiwS90IsEvdCLBL2Q9SJBL2S9SNALEYYp06iVrErG0qdPny5f//PPP9sx3HDDZf/880/2999/ZyOMMEL266+/1p6L/8Yaa6xO7wtw73QM+tyMeWpkLgSlkKAZwIQONdRQdq5UKvawfrJZzGGGGabDtXlw5513ZldccUW28MILZ++8844hxIwzzpg9+uij1i/tZphhhuz4448vXESuy/tN9/TthCStDG2DBEywJn/ooYe2M5QsROgKAnz33XfZ3XffbYjwyiuvGLVz7TfffJN9+umn1tf333+fPf/889mXX36Z7bzzztkcc8zR6XhSrtBu0DZIAIjtcvacQSAOAXIIUTyMNtpo2fTTT28IM/LII2dnnHFGNtNMMxkXGXbYYa397bffnu20007Zvffem6211lq5SMB9xXnEATSmFBE0plaGtkECz24BJtZPsBcPeQgA0J7F5sziTzTRRNl//vMfW0za/vbbb9nbb79t+sFUU01lRx788MMP2YknnmhtJphggmyrrbbqMB4/znbgDG2DBAJRG9T+2muvZeecc0423njj2WJ+8skn2XbbbZdNN910hdTHQnEMP/zwpgCyYKLeP//808QEesKaa66ZTTPNNIV9XHvttYYw4447riEdv6266qrZOOOM00FRbHUuALQcEhTJVU9pv//+e/bwww9nl112WXb11VfXFnakkUYyCgcJJBLUl1j2+OOPn4044oimA/z444/Z6KOPbv/zH9+/+OILa7fYYot1GIt0AM5YE1NOOWX25ptvZp999pkhHv/Rdumll85mn312Q8pGLZdmQUv6CcTaJWcBFpUFQFavu+662eabb57dcccd2YUXXpjdcsstRoVCDhQ9jzSyHvxvc845ZzbJJJN0uC+LOGDAgNqC+0XUd84XXHBB9sQTT9jic29ZGyeccEK22WabZauvvnr20UcftY2i2HKcIM/mlpx9/fXXzZTjmHTSSU25W3nlle3M4rNAUPgff/xRWwC+w6Lfe+89sw6effZZk/mwfHQAuIe0fK6V72DQoEEmLlAk4RwaC+1efvll63u++ebLlltuOWsDRznssMOyJ5980kzPl156ya5JEa0lIZSAOGlD7IgT2uE7wG/RZAtRWw9REQtTTz11iFwgvPXWWyEuuF23zz77hKjghUUWWSREKgxRvodo7oX+/fuHuCghco8QZXyI+kOIymFYYIEFQkQqax8X3e6xzTbbhCgKQkS4MPHEE4cZZpghxEW1fiIChchh7Ptss81mB/1yb7W//vrrQ0RI66Nv377hiCOOCJE7DdH5So8y0PJIwMFCrbfeeiFSZlh//fXDu+++a4usazmzIFFJs0WIukKIipstejQLbeGjjLYzixutghBltyGBv+8999wTIoexayIFh7HGGiuMPfbYYcIJJzTkox3fGUdk/+Hjjz/ugARRpwj9+vWzMXDsv//+IXKdlkeClhMHQJ6tjfMG7R1bH/aemoGw3UMPPTQ75JBDsqOPPtr+f//9960NJh19nnzyyVlcRPsPFh8Xu9Y/4maeeebJLr30UhMHfMdngC8BMeJ1BM5LLLGEOZvUlt8HDhyYXXTRRSaOUBA33XTTtlAQWxIJACGB9IEoAkzZQnlD3rJgcvBwLZ8ji7ZzFBPWdrLJJjOkkaK34IILmm8gBdn1o446qil4gp9++il76qmnsr/++iv78MMPs2+//bamoM4888ymMwD0ze8gAXoLSMZYsCDUt5RSffYI5c/NUCb7hBJ3HNKDTL2C0uix4TfZZBOj8AMPPNDcut5dDLdAQUTxY4Gi3DdEYBHl3StyJOWBqFw+iccee8wQERMQa0RUDuVffPHF2UEHHWRtcB4xPpTOvMVNF1/jHxzcolQfragTCFL9IFJmiOw6RFs/LLnkkmHQoEF2jT/UBweyWt/5rO+NyNeIQLXP6CGMQf1xRl+JJqPpHyiUKJxvvvmm/ae2ec+YjnlwzWsZaEk/QUoxUBfUDGWtscYaJv8/+OADOwSeAjwLhopF0UWBpSIQ61cfcBPG4P0NcAF8F5igfCcCiQfTu7FTLpAe6X89DS2HBD487CdKbB82jzMGmx6HjSKJKHMpa5U+Ic9hoxOcxiL82NA9AMYlb+Qoo4xiOoWuS0PL/A4y//LLL6Zv4NwKoWNQLPSwPmDj7PE7OpCiBHz++ec2ASwqyh8TlYImjMWHAr/66qvapGkxPNCX2omjAKlM9sjj7+ORxi+Sp14QZNFFFzXkxPl06qmnWvTx66+/7tCnAFfzrrvuahwNDyPOp7wx9CQ0TTGsOJcu1HHTTTeZCxalDg0b5WvLLbe0UC7euHfffTd77rnnshtuuMH89UT4dtttt2yWWWbJpfCQhJpTBPD/ebHDoqYKm19wWSM+loBCihWB8nj99ddbYCnqLIYcPAPmKFT/4osvmhmLgskzE4FcZZVVzKQlHsF9fbyjDLSdYijFKXKBEO3uMN1005nCh0cPhwzOnShv7TqcRThq4kOGBx54wLx3XVH0vILGWQqdFDyvQD766KOm/HmFUk4ptVO/uoYzwJn+X3jhhRBNUVbRnicihimPeDfnnntuUx518Cx4OaPJ20FJ7GnFsKl+ArAelv3qq6+abR8nKVtttdUsuBM1/+y+++6z4AyZPnABqIfgEVFC7P964Nk3ooPQMU6fiEDm24ctzzrrrDWFkesefPDBbJ111jFqwryEvWNiejMU8IqnOIjEB74B+oUzwCHOP//8Wk4jyiMAB4A7wDF4/iuvvDLbZpttsr59+zbHsdQsTiDKihMR1lxzzTDffPOFG2+8sUZ1b7zxRthss81qvnzcvnGBwssvv9yhfT0OwPnbb78Nt956a7jwwgvDcccdZz59KJB+OZgCDn7jPsQLcBNvt912IbJyM//gGqJ437fMWZ31W9RZwkILLVS7h+4Hh4tizsZx8MEH136PIi1EJO9wj57kBE0VBzx0lJE2CQ899JCxTbFF2DC+fVgoLBPfwLPPPltjwz52UHRECyIcf/zx5sMfY4wx7EDEEBdA7HAstdRSYfHFF7fPiKSZZprJRFHkHHZwfaTm8Mgjj1gcwNv3ACIgtfkZ280332zigIVnsTlmnHHGEKne+mHRGQdIEHWHELmhBZu6KxLaCgl42GgBWLBmjz32qE2wl9tc9/DDD1sgZ/nll7f/vIz2faWOIa697rrrQlQqbSHgJFA5ugVIEVl97kHgiSCSkIBFoi39fPjhh/8KXHl9Qb/r/iBgVPhqsv/000+vPR9RSXE6/tt6661Nz2mGTjD0IURcmgDI27PPPttkPboAfn1kb6jKWLl5scfx95PpM+2003awwUOiRXM98hcTEzkbxYuZmgSKNtpoI9PEyQHA7z/55JObTkI/3Euf0R3IVVhkkUXsntjz6BRYLZh96BJcg0MoHYOcU3ImcXA9/gPyDnA1K2hFW9zOWAyMl+/oIXmxjUagrawDLIL5558/7LvvvuH22283ruApTBQj6uczZ0/tup5roGJCu7iV44Ibh4H9E+Mn9Kz+PfsW1aZcxFP4oEGDwjHHHBPGHHNMo+qo0IWo+BnVoiv88MMPuWKOA+72/vvvm2UQEcjuDXCGE/DbMsssY5wGjrDttts2RRw0zU9AChgpYmT6QFlRNmd77rmnURIJnj7QU3FZxcEFlvQdaiPbiLAv1Er7s846y9qh3WODV6p+gtQ/gMUBtwmhY7BKFM3v4i6Emc877zzjDuQywlXYp0C6mfoT6LMcVng04SY8F4GwXXbZxfrF8wlXJDxOvqSPYpaBtuIEKIFo0bvttptp5VAZFsKKK64YvvrqqxpFpfLX6wHeAth7771N9qJkYg2kVC0qTIM2qTxPlTyve8AV7r77bstSQs9AaTzqqKNqlJ/2o984YwVttdVW9rwou15hROc59thjLYOpGZygaX4CqG/eeec1SrjnnnvMBRwn2WL2+AXICkY2E+MXlYqqAGE8lE94Fy8itjeeRihU14Q6odxK1eOnM+CvT/cQMB4OPJr4G/AD8D9Zyvgt1NafQ9VPgR+ExFieU3EO2sCpeFZ0Ivk+GuW0obu+he5wAm8qlcFg2mAWRfYYTjzxREvNWm211YzCoA7yA6Ux53nrMAHhAMh+OAmaP/K/q55Erwv4fjvz3iHro+gyOc698SXkWQriQE8//bRxOawAphx9Bb0CXwTjRa/oislbRPmeY5aBUjqBKEeY7rG/QQSsUSTUBCBj77rrLkvKgLKRwVF56kBZfEanYANIZKNGWRtvvHG2/fbbmzeuKGyse6VRRYWMdY1/tqJ+oOxTTjnFPJpsaOUzXMhzFfV97rnnWjYUFgVtoXqsE7Kk9ZssozIU7edR0c1GoJQ4yMuIQblhAbsK6WSrT5RETDkCRASLmBxYvW/HQS4BbmA+o1Qtv/zytrhc21n2EJM14YQT1hBCgSGxf48sRYDyucUWW5hrG0XvmWeeMQUUl7afJ8QVgSUCSrjEeR7yHnEjaw5T8dQIIvi0Nbm3G4XSOoEWToMmreukk05qqA+v8TPhfpMnZzR3toh7LqDriMohk5lktOwDDjigtj9Afebdj4Pr2L4Wzb4OCSf0S//oJTxP0WKob7R9fACku+HzYBscuYUVF42MosB0gUo1+ih/hEd8D9oc21WoVHdeRXO703hKEXTbRORBcMjAjnHOdPnG1QWpuBCvQEqglDYhhhCBSQJBfF8pZykCroENY1bCinUfLQqLsOOOO5qo0djqjR9EqFQTTUEuv4D8D7JywOH4L0UsLwL8zqeugpxd5DXus88+tW11jUApTuC1ah7+oYceMsppBDwr1Hd91uTrGhYG0GKBAKke0tUsXa4hVVwiQCxfSPTCCy+Yz4E09c6QKf0fYkitA+kHIAIiMx1vnlj0z94ZaKc1Vgf3KAOly9UoNx8FDcWnEX3A99PId0+ZXidpFFZaaSWjGHEcn0gCS5euUQ88wqYZSP6ccpO8cafXCHHksKrHIfidndFw4jJcACiNBGAfiIDMgxM0I0GyDCA/iR34SiPSBUSVXjkr0i3ks9A86PfBAV7/Ebct6ltiiTgEIqcMlEICJYMwQBIjlDDZDgACYHICfmJ5FjgAySA4d7oCQgYsDRxfaPyDCxFwTUNcnDsDdlUh4sqamKU5gcwfcuqQ0e2CBOxcgn3m5Rpi+6Pl47NIPZQeUl2EiCNJo2Up0YP6RSxhKgsJ6s3viiuuaH6HslAKCTRxOGqwj9sJZJF468QvqJRO/V40+WoD9WP/K7Q8OIB7o5iqpkKROQlwT7KbvYXTKHTLT0AeANvC2LiJbV3rNJosOE50XZ45yKBxmqAx++v0OQ/UTjUF1G9XAcWJ/D/kp+6jySNKePnll9uY1HeRiei1eXwN7JOsN+5GQPOAzY+DCU7LHI0xxhi1e8unIV2B+dB/ZaC025hmDIIDrMXNS9o4E4yDh9Cw3KFqoweA2miHLU4OvjeXikBtqQSCPcx9sPfr2fIpoMswYdqQYhNQvTfmHXWK8AAC9awPj3jaCLv22mubOBhcYlFeWOaUBNX111/fEMGby/g6CLDh19Bu7VIiKZSAvEBHlGHhoosuCrfcckutcIQPaqT77ygyQUhViaRZNdmTI6smf6YHeYbk6JGQSrCJ+zQ6bp+YoqARnwcOHGg5f0oF15jyjvQaJZMOrsMnp+bNjf7Xf1HPsSRccjLLQLfEgXcaEQ7dYIMN7D+5fGV/p15B/iMcq23csGD1WQTchwAN1x9++OGmjXfWJoU+bnOH2ukZCARpR1NnIsbrC16xbGQsnfXvx+E9p7LKdC+uQS9j7Hgvy0BpTcZPqPf3y7aVi9RPjB4KXztsDnYHQkiWdRb4QaYTJ4A98sCNesi0+D5QxJhhsR9//LEhY5pXUO/5/SINLvD39AvufRMav8aJCGC/Q1nrpNTo08UVAmiSfVTOH+IITDiJIzaAZCNHvYlXUWr6oT0mXXqPeod3Annlj/t6bpS6rfPA/1dkSnYHiggi1Z9Y+H333deqsJQ1E0uLg5QKtICpzxyQR05AVk4e6/J9eETjPMUUU1gOIg4dInc4dJh8L5Z8H/XG7ZGCfshMZkyexdZDAHnoFl98cduK3ohymj4vBEHgTVxJgbEUsdKYA/fH/Y0vAROVOSkLQzy9TA8nHz0IwX5+77ZNr/ecRIuBGUasnknCO6boHdCobax2nBkPQSMVsfTstwgR+J1E0/79+1tegZC+kXGImgm8kTchdl80LykHY9GxChZaaKHavEoHaxSGOBKkHAM2Tk5gEfXkPYR8CpooznjUHn/8cfNVSBSpfWeU7BeZs8K/4iwp1eWNByok31BmciNlcPw4QADdQ+74omt1b65BB8A0FZRNKLG2pVt2EULVnyBFDC0Wt2y9hfITIeyG5XlFCTaO2zqNLHYFATzlEgXFN6B+8kLEeX3gIEMnEeeSWOqqhSB9RMG3Ig7g7+kVcfwl+Aa8jqBrGoUeyTYWdbJwVPyUElZ0rTe9mBgwHu8ZD49yiCwmpYtiFVgYqlLeVZB46lN1E2OtaBE8MtTjVogQuFqqjzRiJqqd3+9QBF6xJqeR+RDSl0lL6zCOUq0aAJmSnPHKkXDpS8ukoEQPvwDIXbxhAKx7rrnmMsWI8rJdjfh58EjG5hevB6QTmTexnvLyFNlGxyIxVA+JvJhCSVbugNedyvophjgSaGBQ3M0332x7D1O560GYrd9RgJSTL87ALh3CwSATrtP04TubDIkbxBIJMSBnugieI/izn3C/8PVYuajUHxpnI+IDgBNiCmIa5pnBZaBHahZJhqPISQvvzMsmZxNIACfwE8mmTSJnXHPVVVdZ356i6oFfAFU6LVKq0o0pfryehXdmIqayOuUcfkz1+uAgMEc4nLhJd6jfQ49YB0wSKeL3339/ofxL2ak8iewmghP45FMOAlT8TibvCiusYDuIlW1cpK2LeiVu2P1DGVrKz+YVykrH5sO1WniSalAuiSbCpvMQKn1W+uB+pKJ7L2BnCEU7xABBoxQ5uwM9Yh3wcCwWZp3H/jw7P3XYUOVLlUO9Fo6OQFErnDxELdm23rdv38KNJ75PL47IyuHlGXkUpYWRDa4Fk5scoKoq4V5K7LABJS/t2/etz8RNcPQ0kpXFGKjhSAxlcEKPcALtN1RGj9/B5CnBO4q0ULC91AmieDq6wSWXXGJ7GDmz0xfx0ZnN7PUO+tYuoBRS7Zuzsqg4g4BUVWNRCEPjN+jMf8+4Kdd366231hTkrip23B+CSFPry+oCgh7Zmo4ChnsUYNF5EEw7OWm8jEzZHPI/dYn6h2YhdthhBytGBdfAi0chiCL3ccrW/UIX/eefF2uCTS+YiKeddprdC4cPCODvkXI39Q3y7L///qbLKHPIF7bwXCZv3IhAlFnEQt7ztaTHkMGziPjYJdPJQiLgAZUTD9AEeIXRf9cEqD/6EbWjJJHjh2xmvwBhVVUD8ZSiNvymdPlUHBV5CoWYtEO5pR4BSiUJpkcccYTdzwedUhNXziB9RgchL9BTs3dSFS0k1zCXHHmKZVnoEXGQukVxFrFYyo9DoUq1Z88NvCOH63yJe9gviAB7heNAoVgTev+h2vncfU9t3mfvldY8roD8hv0jz1FCl112WRMFqZfR388jL1YM2j1xB/1G34wbJPav2skD/xbY1ITtFoQSkGYVdeUAtPWbV9lQHo5iUJx5Y4iyfbSdm23nVPh68cUXbXu6tsDnbR+nFA1V0NjOTjkZMm0odUdJGJ/N5Ldwayu4Mo2KSuLpd8rrUFaHV+9QYGLttdeuvYFF1+VtS0+LXqT3oDDFmWeeaW9Vef755+tupS+6TzrPjUKPIIEfLJPGQTl43ldERbHHHnvMfmPSmBRqD+21115WPn7mmWe2OkTUMdCkeqTSQXWTHXfc0eoFgAj0e80111hdIdqp9pGqm6a1ibRoOvSd2gH0TSWRqaaayl6nAyJQyUzXqfSeXyz1m1Y70xxwpv19991nr9Zh3AMGDKg7j2m9pSJiaxSGuGIYnOLl6wLAgvEbkJLGjlp84bBK5DrsFs0fk5IMJMw4lClCp15h81o+v6FrYHvfdtttxl5xUSNqSAIFuA5WjNtZdYo864fd8oaTRx55pJYJTTIs2jyf8VJy6GUa/hlDjmzHrY3YQx8i2ukVYfrjPrxBjeuwbEigxQfQ2Tx613rqKSylH/QEJ8hjg6LgaNtbwiRVPDj4DAf47LPPrHglrJdhRvn7r8qhaZ+eZUbkMfGgvumHBE0qjFDpzFOnP0hihTJV+7BPNaEzLo4l06r2UVoNJRVTwEknnWQvxOKlW4gOP0Yql1Fljf6pzELxS/98RfPXWTWTMtBjNYtSDJXixEZKnD2YTpiO7GPYcMMNLb0aPzk7e/bbbz/jHCSS+Hcbp1q87iFT6rrrrrNI4zHHHGPtlcJN9C8vEYO+MP/IXoIr8Z0xkES7++6713Yz+72L/p4aC//jF6EGAvdkvybPuccee5hVoP2LomQqteMZ9Y6povnrriWQCz3FCfIwW9W/qVNEzSEohvKuXk5DQVQNp8ooNQ+pb9QVihBFol9Eez5E5DKO0Keauj1UUm28TzWdmzOvu6P6aFzEcNZZZ1ma+xdffPGvuklp2rrkNu9OpERunySVnHrHVGjnmlNPPdU4Hr+vssoqtVqN3Z3fMtDUF2FJxkEpvAMA1yu5AqIQAB87VIVOgGzGIQRliyqLQH3oTCV1XNfSR0KiVyjrWDUV2ank9Q2B99Z56q9UzUFMVLbnkTeI6YoOwbORuAIH4PlwdxNRVQQUTrjTTjvVzL/uUHtL6wT1KFYU4LX1VHvHJENOQ81RoeygkdeTodLOfV9e+0/1C1VS1Xj8NWnf6kd9omtQhQ2uRl3kww8/3H6D6jGHxRE8R+KFnpiGg4MLlOUETattXEXAXMzN855RyArKhxsgs9ENSD4twvzU7es9dupf57Raib+v78v357VyOAtb2nEf8wJvPKG8v4CtY3AsYhNYOORWEnHkenQNrCLSxTlrf2R3nT9lOEFTkaDIXavv8jAyMShnTC5KHfsJURJ5vUxeTqDai0X71Ct/zlMu/TVAuuDpf2yEYUz9+vWzdyMiUnjlDe5wAmbcGyUXUcf1bDXnDFIj4sidBCFk8jUDCZouDvKO9AUTAB47PIGw0sUWW8xeK5OKDyBl+2kB63oiKU/ZS89eFPB+Zkrw6+UWmJRRtoeff/65gyPLt6EQJqVxeamHd0yloqYnxUFLvibXm2wym1CicKoAvIm0b/VVMWmwpihppTMq81xBYkFtFOVT/6EaR4D14/BRG3IJCGZB2V6B9H3C9nmPcqgGstIilkPEBOwEWu69iJVqkEdbsDmTDUyAiAnD+4cuoPoHQgBSt6mjiIcPUeEntrNMXG8xqJ0ymxRx9NcBLCalb0jyEBBVxCPpRZTPUfSp96EayNL/eu5mQMtxAq8PVKp5+Th42DVMdHCvvfaqVSP1bXidXrTtzU2MuxlFjN055CNocotMykqlY/XSinPLckYRJVUe6se9TSyf33kpF1FFOBNjQFdRzYTUrauUN3EVjSnlAkWpcUMSWvKF2b5/3k525513Wq49cXwQQT54XYdyxmYMFooJxNaHwvDvk4Ym6qUSCbWP692T/QxkRPNGEqgdHwaLSdIKffJeQxQ/UTa7pMkxwNbHQkDTj2Zi7X2N6jdNnPFcyvsjuisOWjKppFFIJwKKJg6vbe+eSiRnCfpA/aRiE49nZxDsHAeRn3AWif5g4WQCaeJFoVA6iDRgwADLIAIJQAigTzUVbeDAgeYK5j58J+CDi5qEVYJO6C0gDKJC7fx4gTR7uZn6gAbRMAxpy8Br4bwcE4cK4eHNN9/cXnCha3EEEWiK7NiCRVQvIXA0/fTT24s0Cfp4NzGVSKK4sNfRKcQsjZzv3Iu4vsLRHL4qCAfVVeS69i+12nTTTc1BhPXCC66wAgaHtt8T1kHLIYEmV2e91WyOOeaw6B5vDSO+8NFHH1niCYtKpI43j+FFVE4CeQC04xV3XBO5hCETi8RinXDCCTXTL4oTM/VGGWWUWokYkCGKEkOcKaec0pCK3/FaEh1Mo4kgJ+80AGHon5hITyPA/5SJ6M0y2Dn+dtg3MQTecwTLxdmClUAmM8ogphntEBvk4IHg7EXgfQnSCdAtjjrqKDPhVFiLe6BTIDq0E4k+IrcwVo/DBx2DtHT6UnUzjVHihjwGxgK0U3FPoOWQQNqxJpnPaOMEXZDFWAu4X5Hv2kGEVs6Cpe5m2hHEqXI8k+eS7SiMup6NI7h30Sv4DzMPBY+cP8lprACVuFNSK0ombmDGRZCI+s54B30+o8bS0tBq4kBQlJvHGXEAexfbvvjii00E1NMzAFg+j0wwSi/jlNjhJVWIAl7TR/jap7Ep7E0+5FDVimF4BxEVEQFrFcU4eEkWeonG05VX8fSKgwSKqMfHA/AWHnnkkVbrAGrH/66Cjp4Nh9Cxggjt+IwYgcVXqqla8koCULq2pFWcZYGIkJdSziTtpVCfpJKTfUxMI9011crQckhQDzSpyHT8B2LzWhiPQJVKxy3bLC5HqO5b0P+qgqJ2sHjEg/4TW+czuYL8hwiQM4j8Bv7DFbzeeuuZJ9OnmVdyXNitBm2DBFrgSpKwWqn8t76fd8H6hdBCP/jgg9aGz0TzhCTeZYwjSvsaPBfhO3oJPga9tAvuQzocSbHphhCNq1KyqFVPQtsgQVFgSM4jv1k1LxQMArAtHrjmmmvMKeQzi1D8RPVqIwtFyEBeABYC8QkUQKwWRIRqJ/hxpoGnVoa2QQItcErh+ux/SzdsitrR+JF6Gb0AAADMSURBVNkiP2jQILMEdC1mIEEnvwsJUP9K/kTOww044CbiGEAaIxAitQO0XBSxHniXcWoOimIB/7uoeIkllrCdy2T76LdQzSbGxwAiSHdQW4Gym727V5lAvlB2Osa0n1aFtuEEgjTtq97/HvD1c6DAKamUa1lMglOkfON3IEBFJLBeX+m9GhlHK0JLRhGHFEikpIqlOImSPPzv7QY9FkVsx8kR+KRSeQ9TsSJo5+dsBEpxgl7434K2Ugx7YchALxL0Qi8S9EIvEvRChP8D+bYGVV49uMgAAAAASUVORK5CYII=">
+                            </td>
+                            <td style="width:280px;text-align: left;vertical-align: bottom;padding-bottom: 10px;font-size: 24px">
+                                天工爱和特钢有限公司
+                            </td>
+                            <td style="width: 550px;text-align: left">
+                                <h1 class="text-center">模具钢(圆钢)产品质量证明书</h1>
+                                <h1>Quality Certificate Of Die Steel</h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-left" style="padding-left: 30px">
+                                Tiangong Aihe Special Steel Corp .Ltd.
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 120px" rowspan="2">
+                    <img style="width: 120px"
+                         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANAAAADGCAYAAACjKw7yAAAFhUlEQVR4nO3d0ZKjNhAF0HUq///Lk/gxlcEzcIW6Jc55XoOwuYWmt4VeX//6A1zyV/UAYGUCBAEBgoAAQUCAICBAEBAgCAgQBAQIAn//9A9er9eMcQwzo7Gi+js5c42fxnp0nNGf6WjUfeIJBAEBgoAAQUCAICBAEPixCre71apHb93G3G08M0UBqlqLV/2DrVYqPzvekddXuV5zxn1iCgcBAYKAAEFAgCAgQBC4pYxdWUGqPP6V6z46/8hGzyMjx3vWSvfIJ55AEBAgCAgQBAQIAgIEgcc0k46sXo10NK4rYxp5LH7nMQGq9t1NPLKMXN1g+1SmcBAQIAgIEAQECAKKCH96Vq+6Vg35LwEaaOTS6bNVNaGqYQoHAQGCgABBQIAgoIhwQeVKTnq5JUAdb5aOY/pkxngr++pW+z2OmMJBQIAgIEAQECAICBAEoircSqsgzzZnztipesYO2jOaUt/HOTrPSvfIFZ5AEBAgCAgQBAQIAgIEAc2kF+xSWdrlOiq9vnbp6htsl47rXa6jK1M4CAgQBAQIAgIEgR+rcLtvRDvyHO9j3f0H+C6Vs12KG8rYH+yylUjHG28XpnAQECAICBAEBAgCtxQROu4sMOsP/1HnGfmdjPo9ZqzSvaJyK5hlq3AdXwpYXZ0btZFxtZWqhqZwEBAgCAgQBAQIAgIEgakrUkeVG2c0Io4sjVY3xe6w23jX5lNPIAgIEAQECAICBAEBgsDlXrjRVZ+j441cHn53r9hqfWfV460+/whLNpN+CtWMkvFII/fo2V3HazSFg4AAQUCAICBAELjlxYpdK1ujjrXSMuUdKl2dTa3CdV0K/VQddwJf7V4whYOAAEFAgCAgQBBYspWH/5tVLT37mRlV1MpVuj8GaEblbNZbOEc1k67UIzfy3E9+aeURUzgICBAEBAgCAgQBAYLA1BcrHg5iQu/VyGpb9Ysd7z73SF1f+DiKJxAEBAgCAgQBAYKAAEEgWtLdsW+p4xLwrjpW+rr2Jh5Zsht79IsVOzaZrrYP0FOZwkFAgCAgQBAQIAhERYTqFwx2O8fRFiqz7F41PHL31jif3FKFqyxpjtSxTD9DZRPtakzhICBAEBAgCAgQBH5ckbra6std7FLA6Hod016sOGMQleeoXuo9w91VtVnX3fF7N4WDgABBQIAgIEAQECAITC1jz9h5epelxdXXWNXD1vF++8QTCAICBAEBgoAAQUCAIHBLFa6ryj6uI6ttoXL3O/Sq++rOGt5MuuLePWfPcaQ6jLvr+LJJUzgICBAEBAgCAgSBJXdneNvlD/YZ27HM6tG7+zgdf/PhAap+kV71+Y90LP9Wl5JHqfzNTeEgIEAQECAICBAElq3CnTWy6tO1UHFkl+s40np7kx1ennjl/NVLuqu/kyO7bF0ziikcBAQIAgIEAQGCgABB4Mcq3GrVklFVovdxjq59VIXu01jPrrK8cqwZjaFXfo+uFcjveAJBQIAgIEAQECAICBAEHtNM+klVpfHqeTWH/u7ff/rMKO136f5O19L6jGbSjku3dwnuFaZwEBAgCAgQBAQIArdU4Sp3SOhol5cIvnUd15G7K5aPKWPvEMS3Xa7jk5Wu0RQOAgIEAQGCgABB4DFFhCMj+6hmVKhm7UHL7zw+QF2tFobKylnld2UKBwEBgoAAQUCAICBAEHh8Fa7rKtKzn/l0HXcvhX4fp3IZduWSbk8gCAgQBAQIAgIEAQGCwGOqcGcrNbs0bY4cU+X1dX0J5S0BWmlJble7747e9b8PzjKFg4AAQUCAICBAEIiKCB2rTlesdB0zqmqVxYWVfou3x5Sxq50tla+mY+V1xphM4SAgQBAQIAgIEAQECAKvr47lE1iEJxAEBAgCAgQBAYKAAEHgH8tzcPmWRhJUAAAAAElFTkSuQmCC">
+                </td>
+            </tr>
+            <tr>
+                <td style="height: 32px;padding-left: 10px">
+                    <table class="table-noborder">
+                        <tr>
+                            <td style="width:600px;padding-left: 5px" class="text-left">
+                                客户名称Customer：<input style="text-align: left;width: 300px" type="text"
+                                                    value="江苏宁兴天工模具科技有限公司">
+                            </td>
+                            <td style="width:310px;" class="text-left">证书编号 Certificate No： <input
+                                    style="width: 100px;text-align: left" type="text" value="Y023770"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="padding-top: 5px">
+        <table class="content-table" style="width: 1030px">
+            <tr>
+                <td>钢 号<br/>Steel Grade</td>
+                <td>熔 炼 炉 号<br/>Melting Furnace</td>
+                <td>热 处 理 炉 号<br/>Heat Treatment Lot</td>
+                <td>规格（mm）<br/>Size</td>
+                <td>件数<br/>Piece</td>
+                <td>重量（kg）<br/>Weight</td>
+                <td>交货状态<br/>Condition Of<br/>Delivery</td>
+                <td>技术标准<br/>Technology Standard</td>
+            </tr>
+            <tr>
+                <td style="height: 30px"><input type="text" class="" value="H13"></td>
+                <td><input type="text" class="" value="8818081786"></td>
+                <td><input type="text" class=""></td>
+                <td><input type="text" class="" value="76"></td>
+                <td><input type="text" class=""></td>
+                <td><input type="text" class="" value="652"></td>
+                <td><input type="text" class="" value="Anneal"></td>
+                <td rowspan="2"><input type="text" class="" value="GB/T1299-2014"></td>
+            </tr>
+            <tr style="height: 40px">
+                <td colspan="7" style="border: none">
+                    <table style="width: 100%;border: none">
+                        <tr>
+                            <td style="width:150px;height:30px;border-top:none;border-left:none; ">化学元素<br/>Chemical
+                                Composition
+                            </td>
+                            <td style="border-top:none;"><input type="text" value="C"/></td>
+                            <td style="border-top:none;"><input type="text" value="Si"/></td>
+                            <td style="border-top:none;"><input type="text" value="Mn"/></td>
+                            <td style="border-top:none;"><input type="text" value="P"/></td>
+                            <td style="border-top:none;"><input type="text" value="S"/></td>
+                            <td style="border-top:none;"><input type="text" value="W"/></td>
+                            <td style="border-top:none;"><input type="text" value="Mo"/></td>
+                            <td style="border-top:none;"><input type="text" value="Cr"/></td>
+                            <td style="border-top:none;"><input type="text" value="V"/></td>
+                            <td style="border-top:none;"><input type="text" value="Cu"/></td>
+                            <td style="border-top:none;"><input type="text" value="Ni"/></td>
+                            <td style="border-top:none;"><input type="text" value=""/></td>
+                            <td style="border-top:none;"><input type="text" value=""/></td>
+                            <td style="border-top:none;"><input type="text" value=""/></td>
+                            <td style="border-top:none;border-right:none "><input type="text" value=""/></td>
+                        </tr>
+                        <tr>
+                            <td style="width:150px;height:30px;border-bottom:none;border-left:none; ">含量Content（%）</td>
+                            <td style="border-bottom:none;"><input type="text" value="0.41"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="1.02"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="0.45"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="0.018"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="0.008"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="0.1"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="1.31"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="5.19"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="0.96"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="0.06"/></td>
+                            <td style="border-bottom:none;"><input type="text" value="0.15"/></td>
+                            <td style="border-bottom:none;"><input type="text" value=""/></td>
+                            <td style="border-bottom:none;"><input type="text" value=""/></td>
+                            <td style="border-bottom:none;"><input type="text" value=""/></td>
+                            <td style="border-bottom:none;border-right: none"><input type="text" value=""/></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+        </table>
+    </div>
+    <br/>
+    <div class="text-center no-print" id="btnDiv">
+        <button type="button" style="width: 160px;font-size:20px " id="getPrint">打印</button>
+    </div>
+</div>
+<script th:src="@{/js/jquery-3.4.1.js}"></script>
+<script>
+    $('#getPrint').on('click', function () {
+        let $html = $('html').clone();
+        $html.find('input[type="text"]').each(function (index, elem) {
+            let $elem = $(elem);
+            $elem.after($('<span>').html($elem.val() || '&nbsp;')).remove();
+        });
+        $html.find('#btnDiv').remove();
+        $.ajax({
+            url: '/createPdf',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                htmlContent: $html.html()
+            }
+        }).done(function (resp) {
+            console.log(resp);
+            window.print();
+        });
+    });
+</script>
+</body>
+</html>
