@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: prod
 #  mvc:
 #    static-path-pattern: /static/**,/MP_verify_divyjSQEVfhy6G8X.txt
 #  resources:

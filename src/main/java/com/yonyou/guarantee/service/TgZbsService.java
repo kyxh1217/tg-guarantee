@@ -42,17 +42,15 @@ public interface TgZbsService {
      *
      * @return list
      */
-    List<Map<String, Object>> getFurnaceList(String furnaceNum, String startDate, String endDate, int currPage, int pageSize);
+    List<Map<String, Object>> getFurnaceList(String searchText, int currPage, int pageSize);
 
     /**
      * 查询数量
      *
-     * @param furnaceNum furnaceNum
-     * @param startDate  startDate
-     * @param endDate    endDate
+     * @param searchText searchText
      * @return int
      */
-    Integer getFurnaceCount(String furnaceNum, String startDate, String endDate);
+    Integer getFurnaceCount(String searchText);
 
     /**
      * 获取熔炼炉的光学信息
@@ -61,4 +59,27 @@ public interface TgZbsService {
      */
     List<Map<String, Object>> getChemicalsByFurnace(String furnaceNum);
 
+    /**
+     * 查询质保书列表
+     *
+     * @param iSteelType iSteelType
+     * @param custName   custName
+     * @param startDate  startDate
+     * @param endDate    endDate
+     * @param searchText searchText
+     * @return List
+     */
+    List<Map<String, Object>> getTemByType(String iSteelType, String custName, String startDate, String endDate, String searchText, int currPage, int pageSize);
+
+    /**
+     * getTemByTypeCount
+     *
+     * @param iSteelType iSteelType
+     * @param custName   custName
+     * @param startDate  startDate
+     * @param endDate    endDate
+     * @param searchText searchText
+     * @return List
+     */
+    Integer getTemByTypeCount(String iSteelType, String custName, String startDate, String endDate, String searchText);
 }

@@ -55,50 +55,30 @@ public class TgZbsServiceImpl implements TgZbsService {
     }
 
     @Override
-    public List<Map<String, Object>> getFurnaceList(String furnaceNum, String startDate, String endDate, int currPage, int pageSize) {
-        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " t1.cCertificateNO, t1.cdate, row_number() OVER (ORDER BY cdate DESC) n  FROM (" +
-                " SELECT DISTINCT (t.cCertificateNO) cCertificateNO, SUBSTRING (CONVERT(CHAR(20), MAX (t.cdate),120),1,19) " +
-                " AS cdate FROM SteelTemNurbs t  WHERE NULLIF (t.cdate, '') <> ''";
+    public List<Map<String, Object>> getFurnaceList(String searchText, int currPage, int pageSize) {
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID,cMFNo,cStellGrade FROM SteelTem WHERE iType='0' ";
         List<Object> params = new ArrayList<>();
-        if (!StringUtils.isEmpty(startDate)) {
-            innerSQL = innerSQL + " AND t.cdate>= ?";
-            params.add(startDate + " 00:00:00");
+        if (!StringUtils.isEmpty(searchText)) {
+            innerSQL = innerSQL + " AND (cMFNo like ? or cStellGrade like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
         }
-        if (!StringUtils.isEmpty(endDate)) {
-            innerSQL = innerSQL + " AND t.cdate<= ?";
-            params.add(endDate + " 23:59:59");
-        }
-        if (!StringUtils.isEmpty(furnaceNum)) {
-            innerSQL = innerSQL + " and t.cCertificateNO like ?";
-            params.add("%" + furnaceNum + "%");
-        }
-        innerSQL += " GROUP BY t.cCertificateNO) t1";
-        String sql = "SELECT t2.cCertificateNO,t2.cdate " +
-                " FROM (" + innerSQL + ") t2 " +
-                " WHERE t2.n >  ?";
+        String sql = "SELECT t1.ID,t1.cMFNo,t1.cStellGrade " +
+                " FROM SteelTem t1,(" + innerSQL + ") t2 " +
+                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
         params.add((currPage - 1) * pageSize);
         return tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
     }
 
     @Override
-    public Integer getFurnaceCount(String furnaceNum, String startDate, String endDate) {
-        String sql = "SELECT count(1) count FROM (" +
-                " SELECT DISTINCT (t.cCertificateNO) cCertificateNO, SUBSTRING (CONVERT(CHAR(20), MAX (t.cdate),120),1,19) " +
-                " AS cdate FROM SteelTemNurbs t  WHERE NULLIF (t.cdate, '') <> ''";
+    public Integer getFurnaceCount(String searchText) {
+        String sql = "SELECT count(1) count FROM SteelTem WHERE iType='0'";
         List<Object> params = new ArrayList<>();
-        if (!StringUtils.isEmpty(startDate)) {
-            sql = sql + " AND t.cdate>= ?";
-            params.add(startDate + " 00:00:00");
+        if (!StringUtils.isEmpty(searchText)) {
+            sql = sql + " AND (cMFNo like ? or cStellGrade like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
         }
-        if (!StringUtils.isEmpty(endDate)) {
-            sql = sql + " AND t.cdate<= ?";
-            params.add(endDate + " 23:59:59");
-        }
-        if (!StringUtils.isEmpty(furnaceNum)) {
-            sql = sql + " and t.cCertificateNO like ?";
-            params.add("%" + furnaceNum + "%");
-        }
-        sql += " GROUP BY t.cCertificateNO) t1";
         List<Map<String, Object>> list = tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
         if (CollectionUtils.isEmpty(list)) {
             return 0;
@@ -109,6 +89,66 @@ public class TgZbsServiceImpl implements TgZbsService {
     @Override
     public List<Map<String, Object>> getChemicalsByFurnace(String furnaceNum) {
         return tgBaseDAO.executeQuery("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from SteelTemNurbs t where t.cCertificateNO=?", new Object[]{furnaceNum}, DbType.DB_ZBS);
+    }
+
+    @Override
+    public List<Map<String, Object>> getTemByType(String iSteelType, String custName, String startDate, String endDate, String searchText, int currPage, int pageSize) {
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID FROM SteelTem WHERE iType='2' and iSteelType=?";
+        List<Object> params = new ArrayList<>();
+        params.add(iSteelType);
+        if (!StringUtils.isEmpty(searchText)) {
+            innerSQL = innerSQL + " AND (cMFNo like ? or cStellGrade like ? or cCertificateNO like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+        }
+        if (!StringUtils.isEmpty(startDate)) {
+            innerSQL = innerSQL + " AND dDate>=?";
+            params.add(startDate + " 00:00:00");
+        }
+        if (!StringUtils.isEmpty(endDate)) {
+            innerSQL = innerSQL + " AND dDate<=?";
+            params.add(endDate + " 23:59:59");
+        }
+        if (!StringUtils.isEmpty(custName)) {
+            innerSQL = innerSQL + " AND cCusName=?";
+            params.add(custName);
+        }
+        String sql = "SELECT t1.ID,t1.cCusName,t1.cCertificateNO,SUBSTRING(CONVERT(VARCHAR(10),t1.dDate,120),1,10) dDate,t1.cMFNo,t1.cStellGrade " +
+                " FROM SteelTem t1,(" + innerSQL + ") t2 " +
+                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
+        params.add((currPage - 1) * pageSize);
+        return tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
+    }
+
+    @Override
+    public Integer getTemByTypeCount(String iSteelType, String custName, String startDate, String endDate, String searchText) {
+        String sql = "SELECT count(1) count FROM SteelTem WHERE iType='2' and iSteelType=?";
+        List<Object> params = new ArrayList<>();
+        params.add(iSteelType);
+        if (!StringUtils.isEmpty(searchText)) {
+            sql = sql + " AND (cMFNo like ? or cStellGrade like ? or cCertificateNO like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+        }
+        if (!StringUtils.isEmpty(startDate)) {
+            sql = sql + " AND dDate>=?";
+            params.add(startDate + " 00:00:00");
+        }
+        if (!StringUtils.isEmpty(endDate)) {
+            sql = sql + " AND dDate<=?";
+            params.add(endDate + " 23:59:59");
+        }
+        if (!StringUtils.isEmpty(custName)) {
+            sql = sql + " AND cCusName=?";
+            params.add(custName);
+        }
+        List<Map<String, Object>> list = tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
+        if (CollectionUtils.isEmpty(list)) {
+            return 0;
+        }
+        return (Integer) list.get(0).get("count");
     }
 
 }
