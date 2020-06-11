@@ -1,16 +1,20 @@
 package com.yonyou.guarantee.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.yonyou.guarantee.constants.DbType;
 import com.yonyou.guarantee.dao.ZbsDAO;
 import com.yonyou.guarantee.service.TgZbsService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class TgZbsServiceImpl implements TgZbsService {
@@ -26,7 +30,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         String sql = "SELECT w2.n,w1.ID,w1.cCusCode,rtrim(w1.cCusName) cCusName,rtrim(w1.cCusAbbName) cCusAbbName " +
                 " FROM Customer w1,(" + innerSQL + ") w2 " +
                 " WHERE w1.ID = w2.ID AND w2.n >  " + (currPage - 1) * pageSize + "  ORDER BY w1.ID";
-        return tgBaseDAO.executeQuery(sql, new Object[]{}, DbType.DB_ZBS);
+        return tgBaseDAO.executeQueryList(sql, new Object[]{}, DbType.DB_ZBS);
     }
 
     @Override
@@ -37,7 +41,7 @@ public class TgZbsServiceImpl implements TgZbsService {
             params.add("%" + custName + "%");
             sql = sql + " WHERE w1.cCusName like ? ";
         }
-        List<Map<String, Object>> list = tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
+        List<Map<String, Object>> list = tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
         if (CollectionUtils.isEmpty(list)) {
             return 0;
         }
@@ -46,12 +50,12 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     public List<Map<String, Object>> getStandardList() {
-        return tgBaseDAO.executeQuery("select t.id,rtrim(t.cStand) cStand from Standard t where ISNULL(cStand,'')<>'' ORDER BY t.id", null, DbType.DB_ZBS);
+        return tgBaseDAO.executeQueryList("select t.id,rtrim(t.cStand) cStand from Standard t where ISNULL(cStand,'')<>'' ORDER BY t.id", null, DbType.DB_ZBS);
     }
 
     @Override
     public List<Map<String, Object>> getSteelList() {
-        return tgBaseDAO.executeQuery("SELECT t.ID,rtrim(t.cStellGrade) cStellGrade FROM Steel t ORDER BY t.ID desc", null, DbType.DB_ZBS);
+        return tgBaseDAO.executeQueryList("SELECT t.ID,rtrim(t.cStellGrade) cStellGrade FROM Steel t ORDER BY t.ID desc", null, DbType.DB_ZBS);
     }
 
     @Override
@@ -67,7 +71,7 @@ public class TgZbsServiceImpl implements TgZbsService {
                 " FROM SteelTem t1,(" + innerSQL + ") t2 " +
                 " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
         params.add((currPage - 1) * pageSize);
-        return tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
+        return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
     }
 
     @Override
@@ -79,21 +83,60 @@ public class TgZbsServiceImpl implements TgZbsService {
             params.add("%" + searchText + "%");
             params.add("%" + searchText + "%");
         }
-        List<Map<String, Object>> list = tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
-        if (CollectionUtils.isEmpty(list)) {
+        Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_ZBS);
+        if (map == null) {
             return 0;
         }
-        return (Integer) list.get(0).get("count");
+        return (Integer) map.get("count");
     }
 
     @Override
-    public List<Map<String, Object>> getChemicalsByFurnace(String furnaceNum) {
-        return tgBaseDAO.executeQuery("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from SteelTemNurbs t where t.cCertificateNO=?", new Object[]{furnaceNum}, DbType.DB_ZBS);
+    public Map<String, Object> getTemHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
+        // 1.先从新表中查询记录
+        String colSql = "t.ID,t.iType,t.cCusName,t.cCertificateNO,t.cStellGrade,t.cMFNo,t.cHTLot,t.cSpec,t.iSteelType," +
+                " t.cSteelType,t.cMemo,SUBSTRING(CONVERT(VARCHAR(10),t.dDate,120),1,10) dDate,t.dPiece,t.dWeight,t.cCondition,t.cTStandard,t.cSpecifica," +
+                " t.cCertalPoro,t.cPatternSegre,t.cDecarb,t.cAnnealed,t.cQuenched,t.cPreHardened,t.cEuectic,t.cSizeToler," +
+                " t.cSurFace,t.cUltrasonic,t.cPlane,t.cSide,t.cMicrostru,t.cSegregation,t.cThickness,t.cWithd,t.cStraightness," +
+                " t.cCarbide,t.cTensile,t.cShrinkage,t.cMacStructure,t.cGrainSize,t.cContacts,RTRIM(t.A_T) A_T,RTRIM(t.A_H) A_H," +
+                " RTRIM(t.B_T) B_T,RTRIM(t.B_H) B_H,RTRIM(t.C_H) C_H,RTRIM(t.C_T) C_T," +
+                " RTRIM(t.D_H) D_H,RTRIM(t.D_T) D_T,t.QRCode,t.cSampleNo,t.cOperator,t.cSign,t.bupload";
+        String whereSql = " where t.cMFNo=? and t.cStellGrade=? and t.cCusName=? and t.iSteelType=? ORDER BY t.ID desc";
+        Object[] params = new Object[]{cMFNo, cStellGrade, cCusName, iSteelType};
+        Map<String, Object> map = tgBaseDAO.executeQueryMap("SELECT TOP 1 " + colSql + " FROM NccSteelTem t" + whereSql,
+                params, DbType.DB_ZBS);
+        Map<String, Object> temMap = null;
+        List<Map<String, Object>> nurbsList;
+        // 2.如果新表中有数据，则查询相关历史数据
+        if (map != null) {
+            temMap = map;
+            nurbsList = tgBaseDAO.executeQueryList("select t.cElem,t.dValues from " +
+                    "NccSteelTemNurbs t where t.temId=?", new Object[]{map.get("ID")}, DbType.DB_ZBS);
+        } else {
+            // 3.从旧表中查询记录
+            map = tgBaseDAO.executeQueryMap("SELECT TOP 1 t.cSign+t.cCertificateNO as temId," + colSql + " FROM SteelTem t " + whereSql,
+                    params, DbType.DB_ZBS);
+            // 4.如果旧表中有数据则查询相关历史数据
+            if (map != null) {
+                temMap = map;
+                nurbsList = tgBaseDAO.executeQueryList("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from " +
+                        "SteelTemNurbs t where t.cCertificateNO=?", new Object[]{map.get("temId")}, DbType.DB_ZBS);
+            } else {
+                // 5.最终从相关数据表中查询数据
+                nurbsList = tgBaseDAO.executeQueryList("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from" +
+                        " SteelTemNurbs t where t.cCertificateNO=?", new Object[]{cMFNo}, DbType.DB_ZBS);
+                // todo 从流程中获取
+
+            }
+        }
+        Map<String, Object> retMap = new HashMap<>();
+        retMap.put("tem", temMap);
+        retMap.put("nurbs", nurbsList);
+        return retMap;
     }
 
     @Override
     public List<Map<String, Object>> getTemByType(String iSteelType, String custName, String startDate, String endDate, String searchText, int currPage, int pageSize) {
-        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID FROM SteelTem WHERE iType='2' and iSteelType=?";
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID FROM NccSteelTem WHERE iSteelType=?";
         List<Object> params = new ArrayList<>();
         params.add(iSteelType);
         if (!StringUtils.isEmpty(searchText)) {
@@ -115,15 +158,15 @@ public class TgZbsServiceImpl implements TgZbsService {
             params.add(custName);
         }
         String sql = "SELECT t1.ID,t1.cCusName,t1.cCertificateNO,SUBSTRING(CONVERT(VARCHAR(10),t1.dDate,120),1,10) dDate,t1.cMFNo,t1.cStellGrade " +
-                " FROM SteelTem t1,(" + innerSQL + ") t2 " +
-                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
+                " FROM NccSteelTem t1,(" + innerSQL + ") t2 " +
+                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID desc";
         params.add((currPage - 1) * pageSize);
-        return tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
+        return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
     }
 
     @Override
     public Integer getTemByTypeCount(String iSteelType, String custName, String startDate, String endDate, String searchText) {
-        String sql = "SELECT count(1) count FROM SteelTem WHERE iType='2' and iSteelType=?";
+        String sql = "SELECT count(1) count FROM NccSteelTem WHERE  iSteelType=?";
         List<Object> params = new ArrayList<>();
         params.add(iSteelType);
         if (!StringUtils.isEmpty(searchText)) {
@@ -144,11 +187,154 @@ public class TgZbsServiceImpl implements TgZbsService {
             sql = sql + " AND cCusName=?";
             params.add(custName);
         }
-        List<Map<String, Object>> list = tgBaseDAO.executeQuery(sql, params.toArray(), DbType.DB_ZBS);
-        if (CollectionUtils.isEmpty(list)) {
+        Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_ZBS);
+        if (map == null) {
             return 0;
         }
-        return (Integer) list.get(0).get("count");
+        return (Integer) map.get("count");
     }
 
+    @Override
+    public Map<String, Object> getTemById(String id) {
+        Map<String, Object> retMap = new HashMap<>();
+        String sql = "SELECT t.ID,t.iType,t.cCusName,t.cCertificateNO,t.cStellGrade,t.cMFNo,t.cHTLot,t.cSpec,t.iSteelType," +
+                " t.cSteelType,t.cMemo,SUBSTRING(CONVERT(VARCHAR(10),t.dDate,120),1,10) dDate,t.dPiece,t.dWeight,t.cCondition,t.cTStandard,t.cSpecifica," +
+                " t.cCertalPoro,t.cPatternSegre,t.cDecarb,t.cAnnealed,t.cQuenched,t.cPreHardened,t.cEuectic,t.cSizeToler," +
+                " t.cSurFace,t.cUltrasonic,t.cPlane,t.cSide,t.cMicrostru,t.cSegregation,t.cThickness,t.cWithd,t.cStraightness," +
+                " t.cCarbide,t.cTensile,t.cShrinkage,t.cMacStructure,t.cGrainSize,t.cContacts,RTRIM(t.A_T) A_T,RTRIM(t.A_H) A_H," +
+                " RTRIM(t.B_T) B_T,RTRIM(t.B_H) B_H,RTRIM(t.C_H) C_H,RTRIM(t.C_T) C_T," +
+                " RTRIM(t.D_H) D_H,RTRIM(t.D_T) D_T,t.QRCode,t.cSampleNo,t.cOperator,t.cSign,t.bupload" +
+                " FROM NccSteelTem t where t.ID=?";
+        Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, new Object[]{id}, DbType.DB_ZBS);
+        List<Map<String, Object>> nurbsList = null;
+        if (map != null) {
+            nurbsList = tgBaseDAO.executeQueryList("select t.cElem,t.dValues from " +
+                    "NccSteelTemNurbs t where t.temId=?", new Object[]{map.get("ID")}, DbType.DB_ZBS);
+        }
+        retMap.put("nurbs", nurbsList);
+        retMap.put("tem", map);
+        return retMap;
+    }
+
+    @Override
+    public String getNextTemNum() {
+        Map<String, Object> map = tgBaseDAO.executeQueryMap("SELECT NEXT VALUE FOR temSeq", null, DbType.DB_ZBS);
+        Integer seq = (Integer) map.get("");
+        return String.format("%08d", seq);
+    }
+
+    @Override
+    public List<Map<String, Object>> getQtList(String searchText, int currPage, int pageSize) {
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY a.requestid DESC) n,a.requestid, d.status, dep.departmentname, HR.LASTNAME wuhuaName, isnull( HR1.lastname, '' ) qtName, lphn AS cMFNo, " +
+                "e.ganghao cStellGrade, gg AS cSpec, zxss AS cCertalPoro, dxpx AS cPatternSegre, at AS A_T, ah AS A_H, bt AS B_T, " +
+                " bh AS B_H, ct AS C_T, ch AS C_H, dt AS D_T, dh AS D_H, ttc AS cDecarb, thyd AS cAnnealed, gjthbjyd AS cEuectic,  " +
+                " thwkld AS cCarbide, xwzz AS cMicrostru, xwpx AS cSegregation, cc AS cSizeToler, hdpc AS cThickness, kdpc AS cWithd,  " +
+                " jld AS cGrainSize, csbts AS cUltrasonic, lhjyrq AS lhjyrq, cjzjrq AS qtDate, bmzl AS cSurFace, chhhyd AS cQuenched,  " +
+                " pp  FROM formtable_main_72 A LEFT JOIN hrmresource HR ON A.lhjyy= HR.ID LEFT JOIN hrmresource HR1 " +
+                " ON a.cjjyy= HR1.ID LEFT JOIN hrmresource HR2 ON a.cjgjyy = HR1.ID LEFT JOIN hrmdepartment dep ON a.sjbm= dep.id LEFT JOIN workflow_requestbase d ON a.requestid = d.requestid LEFT JOIN uf_gh e ON a.xgh= e.id " +
+                " WHERE d.currentnodetype <> 0  AND sfhg = '1'";
+        List<Object> params = new ArrayList<>();
+        if (!StringUtils.isEmpty(searchText)) {
+            innerSQL = innerSQL + " AND (lphn like ? or e.ganghao like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+        }
+        String sql = "SELECT *  FROM (" + innerSQL + ") t1 WHERE t1.n > ? ORDER BY t1.n";
+        params.add((currPage - 1) * pageSize);
+        return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_OA);
+    }
+
+    @Override
+    public Integer getQtListCount(String searchText) {
+        String sql = "SELECT count(1) count FROM formtable_main_72 A LEFT JOIN hrmresource HR ON A.lhjyy= HR.ID LEFT JOIN hrmresource HR1 " +
+                " ON a.cjjyy= HR1.ID LEFT JOIN hrmresource HR2 ON a.cjgjyy = HR1.ID LEFT JOIN hrmdepartment dep ON a.sjbm= dep.id" +
+                " LEFT JOIN workflow_requestbase d ON a.requestid = d.requestid LEFT JOIN uf_gh e ON a.xgh= e.id " +
+                " WHERE d.currentnodetype <> 0  AND sfhg = '1'";
+        List<Object> params = new ArrayList<>();
+        if (!StringUtils.isEmpty(searchText)) {
+            sql = sql + " AND (lphn like ? or e.ganghao like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+        }
+        Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_OA);
+        if (map == null) {
+            return 0;
+        }
+        return (Integer) map.get("count");
+    }
+
+    @Override
+    @Transactional
+    public int temSave(String temJson, String nurbsJosn) {
+        JSONObject tem = JSONObject.parseObject(temJson);
+        String id = tem.getString("ID");
+        if (StringUtils.isEmpty(id)) {
+            return insertTem(temJson, nurbsJosn);
+        } else {
+            return updateTem(temJson, nurbsJosn);
+        }
+
+    }
+
+    private int insertTem(String temJson, String nurbsJosn) {
+        JSONObject tem = JSONObject.parseObject(temJson);
+        Set<String> keySet = tem.keySet();
+        List<String> keyList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
+        List<String> holderList = new ArrayList<>();
+        String cCertificateNO = this.getNextTemNum();
+        for (String key : keySet) {
+            if (key.equalsIgnoreCase("ID")) {
+                continue;
+            }
+            if (key.equalsIgnoreCase("cCertificateNO")) {
+                valueList.add(cCertificateNO);
+            } else {
+                valueList.add(tem.get(key));
+            }
+            keyList.add(key);
+            holderList.add("?");
+        }
+        String insertSql = "insert into NccSteelTem (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")";
+        tgBaseDAO.executeUpdate(insertSql, valueList.toArray(), DbType.DB_ZBS);
+        Integer id = this.getTemIdByCertificateNO(cCertificateNO);
+        JSONObject nurbs = JSONObject.parseObject(nurbsJosn);
+        keySet = JSONObject.parseObject(nurbsJosn).keySet();
+        keySet.forEach(key -> tgBaseDAO.executeUpdate("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
+                new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
+        return 0;
+    }
+
+    private int updateTem(String temJson, String nurbsJosn) {
+        JSONObject tem = JSONObject.parseObject(temJson);
+        String id = tem.getString("ID");
+        Set<String> keySet = tem.keySet();
+        List<String> keyList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
+        for (String key : keySet) {
+            if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("cCertificateNO") || key.equalsIgnoreCase("dDate")) {
+                continue;
+            }
+            keyList.add(key);
+            valueList.add(tem.get(key));
+        }
+        String updateSql = "update NccSteelTem set " + String.join("=?,", keyList) + "=? where ID=?";
+        valueList.add(tem.getString("ID"));
+        tgBaseDAO.executeUpdate(updateSql, valueList.toArray(), DbType.DB_ZBS);
+        tgBaseDAO.executeUpdate("delete from NccSteelTemNurbs where temId=?", new Object[]{id}, DbType.DB_ZBS);
+        JSONObject nurbs = JSONObject.parseObject(nurbsJosn);
+        keySet = JSONObject.parseObject(nurbsJosn).keySet();
+        keySet.forEach(key -> tgBaseDAO.executeUpdate("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
+                new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
+        return 0;
+    }
+
+    private Integer getTemIdByCertificateNO(String cCertificateNO) {
+        Map<String, Object> map = tgBaseDAO.executeQueryMap("select ID from NccsteelTem where cCertificateNO=?",
+                new Object[]{cCertificateNO}, DbType.DB_ZBS);
+        if (map == null) {
+            return 0;
+        }
+        return (Integer) map.get("ID");
+    }
 }

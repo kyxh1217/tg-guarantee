@@ -48,9 +48,9 @@ public class TgZbsRestController {
         return RestResultVO.success(pageRespVO);
     }
 
-    @RequestMapping(value = "/furnace/chemicals", method = RequestMethod.GET)
-    public Object getChemicals(String cMFNo) {
-        return RestResultVO.success(tgZbsService.getChemicalsByFurnace(cMFNo));
+    @RequestMapping(value = "/tem/his", method = RequestMethod.GET)
+    public Object getChemicals(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
+        return RestResultVO.success(tgZbsService.getTemHistory(cMFNo, cStellGrade, cCusName, iSteelType));
     }
 
     @RequestMapping(value = "/tem/list", method = RequestMethod.GET)
@@ -62,4 +62,31 @@ public class TgZbsRestController {
         PageRespVO pageRespVO = new PageRespVO.Builder().total(total).addList(dataList).create();
         return RestResultVO.success(pageRespVO);
     }
+
+    @RequestMapping(value = "/tem/id", method = RequestMethod.GET)
+    public Object getTemById(String id) {
+        return RestResultVO.success(tgZbsService.getTemById(id));
+    }
+
+    @RequestMapping(value = "/tem/seq", method = RequestMethod.GET)
+    public Object getNextTemNum() {
+        return RestResultVO.success(tgZbsService.getNextTemNum());
+    }
+
+    @RequestMapping(value = "/qt/list", method = RequestMethod.GET)
+    public Object getQtList(String searchText, Integer currPage, Integer pageSize) {
+        currPage = null == currPage ? 1 : currPage;
+        pageSize = null == pageSize ? 10 : pageSize;
+        List<Map<String, Object>> dataList = tgZbsService.getQtList(searchText, currPage, pageSize);
+        int total = tgZbsService.getQtListCount(searchText);
+        PageRespVO pageRespVO = new PageRespVO.Builder().total(total).addList(dataList).create();
+        return RestResultVO.success(pageRespVO);
+    }
+
+    @RequestMapping(value = "/tem/save", method = RequestMethod.POST)
+    public Object temSave(String temJson, String nurbsJosn) {
+        return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJosn));
+    }
+
+
 }

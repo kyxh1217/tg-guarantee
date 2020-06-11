@@ -57,7 +57,7 @@ public interface TgZbsService {
      *
      * @return list
      */
-    List<Map<String, Object>> getChemicalsByFurnace(String furnaceNum);
+    Map<String, Object> getTemHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType);
 
     /**
      * 查询质保书列表
@@ -82,4 +82,39 @@ public interface TgZbsService {
      * @return List
      */
     Integer getTemByTypeCount(String iSteelType, String custName, String startDate, String endDate, String searchText);
+
+    /**
+     * getTemById
+     *
+     * @param id id
+     * @return map
+     */
+    Map<String, Object> getTemById(String id);
+
+    /**
+     * 获取质保书编号
+     *
+     * @return next tem num
+     */
+    String getNextTemNum();
+
+    /**
+     * 查询客户列表
+     *
+     * @param searchText 客户名称
+     * @param currPage   当前页码
+     * @param pageSize   pageSize
+     * @return list
+     */
+    List<Map<String, Object>> getQtList(String searchText, int currPage, int pageSize);
+
+    /**
+     * 查询客户数据
+     *
+     * @param searchText 客户名称
+     * @return int
+     */
+    Integer getQtListCount(String searchText);
+
+    int temSave(String temJson, String nurbsJosn);
 }

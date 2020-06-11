@@ -4,6 +4,7 @@ import com.yonyou.guarantee.constants.DbType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -32,9 +33,38 @@ public class ZbsDAO {
      * @param dbType
      * @return
      */
-    public List<Map<String, Object>> executeQuery(String sql, Object[] params, DbType dbType) {
+    public List<Map<String, Object>> executeQueryList(String sql, Object[] params, DbType dbType) {
         return Objects.requireNonNull(getJdbcTemplate(dbType)).queryForList(sql, params);
     }
+
+    /**
+     * 查询数据List
+     *
+     * @param sql
+     * @param params
+     * @param dbType
+     * @return
+     */
+    public Map<String, Object> executeQueryMap(String sql, Object[] params, DbType dbType) {
+        List<Map<String, Object>> list = executeQueryList(sql, params, dbType);
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return list.get(0);
+    }
+
+    /**
+     * 查询数据List
+     *
+     * @param sql
+     * @param params
+     * @param dbType
+     * @return
+     */
+    public Integer executeUpdate(String sql, Object[] params, DbType dbType) {
+        return Objects.requireNonNull(getJdbcTemplate(dbType)).update(sql, new ArgumentPreparedStatementSetter(params));
+    }
+
 
     private JdbcTemplate getJdbcTemplate(DbType dbType) {
         if (dbType.equals(DbType.DB_ZBS)) {
