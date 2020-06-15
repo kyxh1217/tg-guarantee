@@ -159,4 +159,36 @@ public interface TgZbsService {
      * @return int
      */
     int batchSave(String headJson, String bodyJson, String refJson);
+
+    /**
+     * 查询质保书列表
+     *
+     * @param iSteelType iSteelType
+     * @param custName   custName
+     * @param startDate  startDate
+     * @param endDate    endDate
+     * @param searchText searchText
+     * @return List
+     */
+    List<Map<String, Object>> getMultiByType(String iSteelType, String custName, String startDate, String endDate, String searchText, int currPage, int pageSize);
+
+    /**
+     * getTemByTypeCount
+     *
+     * @param iSteelType iSteelType
+     * @param custName   custName
+     * @param startDate  startDate
+     * @param endDate    endDate
+     * @param searchText searchText
+     * @return List
+     */
+    Integer getMultiByTypeCount(String iSteelType, String custName, String startDate, String endDate, String searchText);
+
+    /**
+     * getTemById
+     *
+     * @param id id
+     * @return map
+     */
+    Map<String, Object> getMultiById(String id);
 }

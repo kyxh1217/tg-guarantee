@@ -329,6 +329,84 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     }
 
+    @Override
+    public List<Map<String, Object>> getMultiByType(String iSteelType, String custName, String startDate, String endDate, String searchText, int currPage, int pageSize) {
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID FROM NccMILLTest WHERE iSteelType=?";
+        List<Object> params = new ArrayList<>();
+        params.add(iSteelType);
+        if (!StringUtils.isEmpty(custName)) {
+            innerSQL = innerSQL + " AND cCustomer= ?";
+            params.add(custName);
+        }
+        if (!StringUtils.isEmpty(startDate)) {
+            innerSQL = innerSQL + " AND dDate>=?";
+            params.add(startDate + " 00:00:00");
+        }
+        if (!StringUtils.isEmpty(endDate)) {
+            innerSQL = innerSQL + " AND dDate<=?";
+            params.add(endDate + " 23:59:59");
+        }
+        if (!StringUtils.isEmpty(searchText)) {
+            innerSQL = innerSQL + " AND (cStellGrade like ? or cCertificateNo like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+        }
+        String sql = "SELECT t1.ID,t1.cCertificateNo,t1.cStellGrade,t1.cCustomer,SUBSTRING(CONVERT(VARCHAR(10),t1.dDate,120),1,10) dDate " +
+                " FROM NccMILLTest t1,(" + innerSQL + ") t2 " +
+                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
+        params.add((currPage - 1) * pageSize);
+        return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
+    }
+
+    @Override
+    public Integer getMultiByTypeCount(String iSteelType, String custName, String startDate, String endDate, String searchText) {
+        String sql = "SELECT count(1) count FROM NccMILLTest WHERE iSteelType=?";
+        List<Object> params = new ArrayList<>();
+        params.add(iSteelType);
+        if (!StringUtils.isEmpty(custName)) {
+            sql = sql + " AND cCustomer= ?";
+            params.add(custName);
+        }
+        if (!StringUtils.isEmpty(startDate)) {
+            sql = sql + " AND dDate>=?";
+            params.add(startDate + " 00:00:00");
+        }
+        if (!StringUtils.isEmpty(endDate)) {
+            sql = sql + " AND dDate<=?";
+            params.add(endDate + " 23:59:59");
+        }
+        if (!StringUtils.isEmpty(searchText)) {
+            sql = sql + " AND (cStellGrade like ? or cCertificateNo like ?)";
+            params.add("%" + searchText + "%");
+            params.add("%" + searchText + "%");
+        }
+        Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_ZBS);
+        if (map == null) {
+            return 0;
+        }
+        return (Integer) map.get("count");
+    }
+
+    @Override
+    public Map<String, Object> getMultiById(String id) {
+        Map<String, Object> headMap = tgBaseDAO.executeQueryMap("SELECT t.ID,t.cCertificateNo,t.cSign,t.cCustomer," +
+                "SUBSTRING(CONVERT(VARCHAR(10),t.dDate,120),1,10) dDate,t.cStellGrade,t.cStellGradeW,t.cContractNO," +
+                "t.cCERTIFICATE,t.cPROCESS,t.cDEFORMATION,t.cGSIZE,t.cDELIVERY,t.cULTRASONIC,t.cDECARBURIZATION,t.cQUALITY," +
+                "t.iSteelType,t.cNOTES1,t.cNOTES2,t.cSPECIFICATION from NccMILLTest t where t.ID=?", new Object[]{id}, DbType.DB_ZBS);
+        List<Map<String, Object>> batchList = tgBaseDAO.executeQueryList("SELECT t.i_id,t.millId,t.cCertificateNo," +
+                "t.cHEATNO,t.cSIZES,t.cPCS,t.dWeight,t.cFields1,t.cFields2,t.cFields3,t.cFields4,t.cFields5,t.cFields6," +
+                "t.cFields7,t.cFields8,t.cFields9,t.cFields10,t.cFields11,t.cANNEALLING,t.cHardness,t.A_T,t.A_H,t.B_H," +
+                "t.B_T,t.C_H,t.C_T,t.D_H,t.C_T,t.D_H,t.D_T,t.cPorosity,t.cSegregation,t.cDistribution,t.cSize,t.cMICROSTRUCTURE," +
+                "t.cMICROHOMOGENITY,t.iSteelType FROM NccMILLTestDetail t where t.millId=?", new Object[]{id}, DbType.DB_ZBS);
+        Map<String, Object> refMap = tgBaseDAO.executeQueryMap("SELECT TOP 1 t.ID,t.millId,t.C,t.Si,t.Mn,t.P,t.S,t.W,t.Mo," +
+                "t.Cr,t.V,t.Cu,t.Ni  FROM NccElemental t where t.millId=? order by t.ID desc", new Object[]{id}, DbType.DB_ZBS);
+        Map<String, Object> map = new HashMap<>();
+        map.put("head", headMap);
+        map.put("ref", refMap);
+        map.put("batchList", batchList);
+        return map;
+    }
+
     private int insertTem(String temJson, String nurbsJosn) {
         JSONObject tem = JSONObject.parseObject(temJson);
         Set<String> keySet = tem.keySet();

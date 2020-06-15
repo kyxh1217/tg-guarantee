@@ -73,9 +73,24 @@ public class TgZbsRestController {
         return RestResultVO.success(pageRespVO);
     }
 
+    @RequestMapping(value = "/multi/list", method = RequestMethod.GET)
+    public Object getMultiByType(String iSteelType, String custName, String startDate, String endDate, String searchText, Integer currPage, Integer pageSize) {
+        currPage = null == currPage ? 1 : currPage;
+        pageSize = null == pageSize ? 10 : pageSize;
+        List<Map<String, Object>> dataList = tgZbsService.getMultiByType(iSteelType, custName, startDate, endDate, searchText, currPage, pageSize);
+        int total = tgZbsService.getMultiByTypeCount(iSteelType, custName, startDate, endDate, searchText);
+        PageRespVO pageRespVO = new PageRespVO.Builder().total(total).addList(dataList).create();
+        return RestResultVO.success(pageRespVO);
+    }
+
     @RequestMapping(value = "/tem/id", method = RequestMethod.GET)
     public Object getTemById(String id) {
         return RestResultVO.success(tgZbsService.getTemById(id));
+    }
+
+    @RequestMapping(value = "/multi/id", method = RequestMethod.GET)
+    public Object getMultiById(String id) {
+        return RestResultVO.success(tgZbsService.getMultiById(id));
     }
 
     @RequestMapping(value = "/tem/seq", method = RequestMethod.GET)
