@@ -48,6 +48,16 @@ public class TgZbsRestController {
         return RestResultVO.success(pageRespVO);
     }
 
+    @RequestMapping(value = "/batch/list", method = RequestMethod.GET)
+    public Object getBatchList(String searchText, String steelGrade, Integer currPage, Integer pageSize) {
+        currPage = null == currPage ? 1 : currPage;
+        pageSize = null == pageSize ? 10 : pageSize;
+        List<Map<String, Object>> dataList = tgZbsService.getBatchList(searchText, steelGrade, currPage, pageSize);
+        int total = tgZbsService.getBatchListCount(searchText, steelGrade);
+        PageRespVO pageRespVO = new PageRespVO.Builder().total(total).addList(dataList).create();
+        return RestResultVO.success(pageRespVO);
+    }
+
     @RequestMapping(value = "/tem/his", method = RequestMethod.GET)
     public Object getChemicals(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
         return RestResultVO.success(tgZbsService.getTemHistory(cMFNo, cStellGrade, cCusName, iSteelType));
@@ -88,5 +98,13 @@ public class TgZbsRestController {
         return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJosn));
     }
 
+    @RequestMapping(value = "/batch/save", method = RequestMethod.POST)
+    public Object batchSave(String headJson, String bodyJson, String refJson) {
+        return RestResultVO.success(tgZbsService.batchSave(headJson, bodyJson, refJson));
+    }
 
+    @RequestMapping(value = "/elem/limits", method = RequestMethod.GET)
+    public Object getQtList(String cMFNo) {
+        return RestResultVO.success(tgZbsService.getElementLimits(cMFNo));
+    }
 }

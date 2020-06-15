@@ -116,5 +116,47 @@ public interface TgZbsService {
      */
     Integer getQtListCount(String searchText);
 
+    /**
+     * 保存质保书
+     *
+     * @param temJson   temJson
+     * @param nurbsJosn nurbsJosn
+     * @return int
+     */
     int temSave(String temJson, String nurbsJosn);
+
+
+    /**
+     * 查询客户列表
+     *
+     * @param cMFNo 客户名称
+     * @return list
+     */
+    List<Map<String, Object>> getElementLimits(String cMFNo);
+
+    /**
+     * 获取熔炼炉号
+     *
+     * @return list
+     */
+    List<Map<String, Object>> getBatchList(String searchText, String steelGrade, int currPage, int pageSize);
+
+    /**
+     * getBatchListCount
+     *
+     * @param searchText searchText
+     * @param steelGrade steelGrade
+     * @return int
+     */
+    Integer getBatchListCount(String searchText, String steelGrade);
+
+    /**
+     * 保存质保书
+     *
+     * @param headJson headJson
+     * @param bodyJson bodyJson
+     * @param refJson  refJson
+     * @return int
+     */
+    int batchSave(String headJson, String bodyJson, String refJson);
 }

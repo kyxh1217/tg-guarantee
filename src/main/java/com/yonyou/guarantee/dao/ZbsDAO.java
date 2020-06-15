@@ -6,8 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,6 +69,18 @@ public class ZbsDAO {
      */
     public Integer executeUpdate(String sql, Object[] params, DbType dbType) {
         return Objects.requireNonNull(getJdbcTemplate(dbType)).update(sql, new ArgumentPreparedStatementSetter(params));
+    }
+
+    public Integer insert(String sql, Object[] params, DbType dbType) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        PreparedStatementCreator preparedStatementCreator = con -> {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatementSetter pss = new ArgumentPreparedStatementSetter(params);
+            pss.setValues(ps);
+            return ps;
+        };
+        Objects.requireNonNull(getJdbcTemplate(dbType)).update(preparedStatementCreator, keyHolder);
+        return Objects.requireNonNull(keyHolder.getKey()).intValue();
     }
 
 

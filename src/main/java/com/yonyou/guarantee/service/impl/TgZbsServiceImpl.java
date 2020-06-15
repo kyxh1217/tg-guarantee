@@ -1,5 +1,6 @@
 package com.yonyou.guarantee.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yonyou.guarantee.constants.DbType;
 import com.yonyou.guarantee.dao.ZbsDAO;
@@ -276,6 +277,58 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     }
 
+    @Override
+    public List<Map<String, Object>> getElementLimits(String cMFNo) {
+        return tgBaseDAO.executeQueryList("select RTRIM(t.cElem) cElem,RTRIM(t.dLLimit) dLLimit,RTRIM(t.dSLimit) dSLimit from Elemental t " +
+                "where t.cStellNo=? ORDER BY iNo", new Object[]{cMFNo}, DbType.DB_ZBS);
+    }
+
+    @Override
+    public List<Map<String, Object>> getBatchList(String searchText, String steelGrade, int currPage, int pageSize) {
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID,cMFNo,cStellGrade FROM SteelTem WHERE iType='0' and cStellGrade=?";
+        List<Object> params = new ArrayList<>();
+        params.add(steelGrade);
+        if (!StringUtils.isEmpty(searchText)) {
+            innerSQL = innerSQL + " AND cMFNo like ?";
+            params.add("%" + searchText + "%");
+        }
+        String sql = "SELECT t1.ID,t1.cMFNo,t1.cStellGrade " +
+                " FROM SteelTem t1,(" + innerSQL + ") t2 " +
+                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
+        params.add((currPage - 1) * pageSize);
+        return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
+    }
+
+    @Override
+    public Integer getBatchListCount(String searchText, String steelGrade) {
+        String sql = "SELECT count(1) count FROM SteelTem WHERE iType='0' and cStellGrade=?";
+        List<Object> params = new ArrayList<>();
+        params.add(steelGrade);
+        if (!StringUtils.isEmpty(searchText)) {
+            sql = sql + " AND cMFNo like ?";
+            params.add("%" + searchText + "%");
+        }
+        Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_ZBS);
+        if (map == null) {
+            return 0;
+        }
+        return (Integer) map.get("count");
+    }
+
+    @Override
+    @Transactional
+    public int batchSave(String headJson, String bodyJson, String refJson) {
+        JSONObject head = JSONObject.parseObject(headJson);
+        String id = head.getString("ID");
+        if (StringUtils.isEmpty(id)) {
+            return insertBatch(headJson, bodyJson, refJson);
+        } else {
+            // return updateTem(temJson, nurbsJosn);
+            return 0;
+        }
+
+    }
+
     private int insertTem(String temJson, String nurbsJosn) {
         JSONObject tem = JSONObject.parseObject(temJson);
         Set<String> keySet = tem.keySet();
@@ -296,12 +349,75 @@ public class TgZbsServiceImpl implements TgZbsService {
             holderList.add("?");
         }
         String insertSql = "insert into NccSteelTem (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")";
-        tgBaseDAO.executeUpdate(insertSql, valueList.toArray(), DbType.DB_ZBS);
-        Integer id = this.getTemIdByCertificateNO(cCertificateNO);
+        Integer id = tgBaseDAO.insert(insertSql, valueList.toArray(), DbType.DB_ZBS);
         JSONObject nurbs = JSONObject.parseObject(nurbsJosn);
         keySet = JSONObject.parseObject(nurbsJosn).keySet();
-        keySet.forEach(key -> tgBaseDAO.executeUpdate("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
+        keySet.forEach(key -> tgBaseDAO.insert("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
                 new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
+        return 0;
+    }
+
+    private int insertBatch(String headForm, String bodyJson, String refJson) {
+        JSONObject head = JSONObject.parseObject(headForm);
+        Set<String> keySet = head.keySet();
+        List<String> keyList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
+        List<String> holderList = new ArrayList<>();
+        String cCertificateNO = this.getNextTemNum();
+        for (String key : keySet) {
+            if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("dDate")) {
+                continue;
+            }
+            if (key.equalsIgnoreCase("cCertificateNo")) {
+                valueList.add(cCertificateNO);
+            } else {
+                valueList.add(head.get(key));
+            }
+            keyList.add(key);
+            holderList.add("?");
+        }
+        Integer millId = tgBaseDAO.insert("insert into NccMILLTest (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")", valueList.toArray(), DbType.DB_ZBS);
+        List<JSONObject> bodyArray = JSONArray.parseArray(bodyJson, JSONObject.class);
+        for (JSONObject body : bodyArray) {
+            keySet = body.keySet();
+            keyList = new ArrayList<>();
+            valueList = new ArrayList<>();
+            holderList = new ArrayList<>();
+            for (String key : keySet) {
+                if (key.equalsIgnoreCase("ID")) {
+                    continue;
+                }
+                if (key.equalsIgnoreCase("millId")) {
+                    valueList.add(millId);
+                } else {
+                    valueList.add(body.get(key));
+                }
+                keyList.add(key);
+                holderList.add("?");
+            }
+            tgBaseDAO.insert("insert into NccMILLTestDetail (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
+                    valueList.toArray(), DbType.DB_ZBS);
+        }
+        if (!StringUtils.isEmpty(refJson)) {
+            JSONObject ref = JSONObject.parseObject(refJson);
+            keySet = ref.keySet();
+            keyList = new ArrayList<>();
+            valueList = new ArrayList<>();
+            holderList = new ArrayList<>();
+            for (String key : keySet) {
+                if (key.equalsIgnoreCase("ID")) {
+                    continue;
+                }
+                valueList.add(ref.get(key));
+                keyList.add(key);
+                holderList.add("?");
+            }
+            valueList.add(millId);
+            keyList.add("millId");
+            holderList.add("?");
+            tgBaseDAO.insert("insert into NccElemental (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
+                    valueList.toArray(), DbType.DB_ZBS);
+        }
         return 0;
     }
 
@@ -324,7 +440,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         tgBaseDAO.executeUpdate("delete from NccSteelTemNurbs where temId=?", new Object[]{id}, DbType.DB_ZBS);
         JSONObject nurbs = JSONObject.parseObject(nurbsJosn);
         keySet = JSONObject.parseObject(nurbsJosn).keySet();
-        keySet.forEach(key -> tgBaseDAO.executeUpdate("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
+        keySet.forEach(key -> tgBaseDAO.insert("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
                 new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
         return 0;
     }
