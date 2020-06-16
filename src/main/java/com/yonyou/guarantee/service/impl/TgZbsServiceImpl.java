@@ -317,16 +317,14 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     @Transactional
-    public int batchSave(String headJson, String bodyJson, String refJson) {
+    public int multiSave(String headJson, String bodyJson, String refJson) {
         JSONObject head = JSONObject.parseObject(headJson);
         String id = head.getString("ID");
         if (StringUtils.isEmpty(id)) {
             return insertBatch(headJson, bodyJson, refJson);
         } else {
-            // return updateTem(temJson, nurbsJosn);
-            return 0;
+            return updateBatch(headJson, bodyJson, refJson);
         }
-
     }
 
     @Override
@@ -407,6 +405,25 @@ public class TgZbsServiceImpl implements TgZbsService {
         return map;
     }
 
+    @Override
+    public Map<String, Object> getBathHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
+        Map<String, Object> retMap = new HashMap<>();
+        Map<String, Object> dataMap = tgBaseDAO.executeQueryMap("select top 1 t2.millId,t2.cCertificateNo,t2.cHEATNO," +
+                " t2.cSIZES,t2.cPCS,t2.dWeight,t2.cFields1,t2.cFields2,t2.cFields3,t2.cFields4,t2.cFields5,t2.cFields6," +
+                " t2.cFields7,t2.cFields8,t2.cFields9,t2.cFields10,t2.cFields11,t2.cANNEALLING,t2.cHardness,t2.A_T,t2.A_H," +
+                " t2.B_H,t2.B_T,t2.C_H,t2.C_T,t2.D_H,t2.C_T,t2.D_H,t2.D_T,t2.cPorosity,t2.cSegregation,t2.cDistribution," +
+                " t2.cSize,t2.cMICROSTRUCTURE,t2.cMICROHOMOGENITY,t2.iSteelType from NccMILLTest t1,NccMILLTestDetail t2 " +
+                " where t1.ID=t2.millId and t1.cCustomer=? and t1.iSteelType=?" +
+                " and t1.cStellGrade=? and t2.cHEATNO=? ORDER BY t1.ID desc", new Object[]{cCusName, iSteelType, cStellGrade, cMFNo}, DbType.DB_ZBS);
+        if (dataMap == null) {
+            List<Map<String, Object>> nurbsList = tgBaseDAO.executeQueryList("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from" +
+                    " SteelTemNurbs t where t.cCertificateNO=?", new Object[]{cMFNo}, DbType.DB_ZBS);
+            retMap.put("nurbsList", nurbsList);
+        }
+        retMap.put("dataMap", dataMap);
+        return retMap;
+    }
+
     private int insertTem(String temJson, String nurbsJosn) {
         JSONObject tem = JSONObject.parseObject(temJson);
         Set<String> keySet = tem.keySet();
@@ -484,6 +501,69 @@ public class TgZbsServiceImpl implements TgZbsService {
             holderList = new ArrayList<>();
             for (String key : keySet) {
                 if (key.equalsIgnoreCase("ID")) {
+                    continue;
+                }
+                valueList.add(ref.get(key));
+                keyList.add(key);
+                holderList.add("?");
+            }
+            valueList.add(millId);
+            keyList.add("millId");
+            holderList.add("?");
+            tgBaseDAO.insert("insert into NccElemental (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
+                    valueList.toArray(), DbType.DB_ZBS);
+        }
+        return 0;
+    }
+
+    private int updateBatch(String headForm, String bodyJson, String refJson) {
+        JSONObject head = JSONObject.parseObject(headForm);
+        String millId = head.getString("ID");
+        Set<String> keySet = head.keySet();
+        List<String> keyList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
+        for (String key : keySet) {
+            if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("dDate") || key.equalsIgnoreCase("cCertificateNo")) {
+                continue;
+            }
+            valueList.add(head.get(key));
+            keyList.add(key);
+        }
+        String updateSql = "update NccMILLTest set " + String.join("=?,", keyList) + "=? where ID=?";
+        valueList.add(millId);
+        tgBaseDAO.executeUpdate(updateSql, valueList.toArray(), DbType.DB_ZBS);
+        tgBaseDAO.executeUpdate("delete from NccMILLTestDetail where millId=?", new Object[]{millId}, DbType.DB_ZBS);
+        tgBaseDAO.executeUpdate("delete from NccElemental where millId=?", new Object[]{millId}, DbType.DB_ZBS);
+        List<String> holderList;
+        List<JSONObject> bodyArray = JSONArray.parseArray(bodyJson, JSONObject.class);
+        for (JSONObject body : bodyArray) {
+            keySet = body.keySet();
+            keyList = new ArrayList<>();
+            valueList = new ArrayList<>();
+            holderList = new ArrayList<>();
+            for (String key : keySet) {
+                if (key.equalsIgnoreCase("i_id")) {
+                    continue;
+                }
+                if (key.equalsIgnoreCase("millId")) {
+                    valueList.add(millId);
+                } else {
+                    valueList.add(body.get(key));
+                }
+                keyList.add(key);
+                holderList.add("?");
+            }
+            tgBaseDAO.insert("insert into NccMILLTestDetail (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
+                    valueList.toArray(), DbType.DB_ZBS);
+        }
+        if (!StringUtils.isEmpty(refJson)) {
+            JSONObject ref = JSONObject.parseObject(refJson);
+            keySet = ref.keySet();
+            keyList = new ArrayList<>();
+            valueList = new ArrayList<>();
+            holderList = new ArrayList<>();
+            for (String key : keySet) {
+                if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("millId")) {
                     continue;
                 }
                 valueList.add(ref.get(key));

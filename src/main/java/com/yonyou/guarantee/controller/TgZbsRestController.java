@@ -113,13 +113,19 @@ public class TgZbsRestController {
         return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJosn));
     }
 
-    @RequestMapping(value = "/batch/save", method = RequestMethod.POST)
+    @RequestMapping(value = "/multi/save", method = RequestMethod.POST)
     public Object batchSave(String headJson, String bodyJson, String refJson) {
-        return RestResultVO.success(tgZbsService.batchSave(headJson, bodyJson, refJson));
+        return RestResultVO.success(tgZbsService.multiSave(headJson, bodyJson, refJson));
     }
 
     @RequestMapping(value = "/elem/limits", method = RequestMethod.GET)
     public Object getQtList(String cMFNo) {
         return RestResultVO.success(tgZbsService.getElementLimits(cMFNo));
+    }
+
+
+    @RequestMapping(value = "/batch/his", method = RequestMethod.GET)
+    public Object batchHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
+        return RestResultVO.success(tgZbsService.getBathHistory(cMFNo, cStellGrade, cCusName, iSteelType));
     }
 }

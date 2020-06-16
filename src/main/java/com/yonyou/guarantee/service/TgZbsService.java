@@ -158,7 +158,7 @@ public interface TgZbsService {
      * @param refJson  refJson
      * @return int
      */
-    int batchSave(String headJson, String bodyJson, String refJson);
+    int multiSave(String headJson, String bodyJson, String refJson);
 
     /**
      * 查询质保书列表
@@ -191,4 +191,11 @@ public interface TgZbsService {
      * @return map
      */
     Map<String, Object> getMultiById(String id);
+
+    /**
+     * 获取熔炼炉的光学信息
+     *
+     * @return list
+     */
+    Map<String, Object> getBathHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType);
 }
