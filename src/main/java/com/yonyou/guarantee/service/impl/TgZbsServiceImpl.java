@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.yonyou.guarantee.constants.DbType;
 import com.yonyou.guarantee.dao.ZbsDAO;
+import com.yonyou.guarantee.pdf.PdfUtils;
 import com.yonyou.guarantee.service.TgZbsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,8 @@ import java.util.Set;
 public class TgZbsServiceImpl implements TgZbsService {
     @Resource
     private ZbsDAO tgBaseDAO;
+    @Resource
+    private PdfUtils pdfUtils;
 
     @Override
     public List<Map<String, Object>> getCustomerList(String custName, int currPage, int pageSize) {
@@ -424,6 +428,29 @@ public class TgZbsServiceImpl implements TgZbsService {
         return retMap;
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public String genSinglePdf(String id) throws IOException {
+        Map<String, Object> map = this.getTemById(id);
+        List<Map<String, Object>> nurbsList = (List<Map<String, Object>>) map.get("nurbs");
+        Map<String, Object> tem = (Map<String, Object>) map.get("tem");
+        if (nurbsList != null) {
+            nurbsList.forEach(item -> tem.put((String) item.get("cElem"), item.get("dValues")));
+        }
+        String iSteelType = String.valueOf(tem.get("iSteelType"));
+        return pdfUtils.genSinglePdf(tem, "1".equals(iSteelType) ? "TGY" : "TGB");
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public String genMultiPdf(String id) throws IOException {
+        Map<String, Object> map = this.getMultiById(id);
+        Map<String, Object> head = (Map<String, Object>) map.get("head");
+        Map<String, Object> ref = (Map<String, Object>) map.get("ref");
+        List<Map<String, Object>> batchList = (List<Map<String, Object>>) map.get("batchList");
+        return pdfUtils.genMultiPdf(head, ref, batchList);
+    }
+
     private int insertTem(String temJson, String nurbsJosn) {
         JSONObject tem = JSONObject.parseObject(temJson);
         Set<String> keySet = tem.keySet();
@@ -479,7 +506,7 @@ public class TgZbsServiceImpl implements TgZbsService {
             valueList = new ArrayList<>();
             holderList = new ArrayList<>();
             for (String key : keySet) {
-                if (key.equalsIgnoreCase("ID")) {
+                if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("i_id")) {
                     continue;
                 }
                 if (key.equalsIgnoreCase("millId")) {

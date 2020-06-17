@@ -1,5 +1,6 @@
 package com.yonyou.guarantee.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -198,4 +199,8 @@ public interface TgZbsService {
      * @return list
      */
     Map<String, Object> getBathHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType);
+
+    String genSinglePdf(String id) throws IOException;
+
+    String genMultiPdf(String id) throws IOException;
 }

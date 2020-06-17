@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -127,5 +128,15 @@ public class TgZbsRestController {
     @RequestMapping(value = "/batch/his", method = RequestMethod.GET)
     public Object batchHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
         return RestResultVO.success(tgZbsService.getBathHistory(cMFNo, cStellGrade, cCusName, iSteelType));
+    }
+
+    @RequestMapping(value = "/pdf/gen/single", method = RequestMethod.GET)
+    public Object genSinglePdf(String id) throws IOException {
+        return RestResultVO.success(tgZbsService.genSinglePdf(id));
+    }
+
+    @RequestMapping(value = "/pdf/gen/multi", method = RequestMethod.GET)
+    public Object genMultiPdf(String id) throws IOException {
+        return RestResultVO.success(tgZbsService.genMultiPdf(id));
     }
 }
