@@ -1,13 +1,17 @@
 package com.yonyou.guarantee.controller;
 
+import com.yonyou.guarantee.annotation.PassToken;
+import com.yonyou.guarantee.common.JWTTokenUtil;
 import com.yonyou.guarantee.service.TgZbsService;
 import com.yonyou.guarantee.vo.PageRespVO;
 import com.yonyou.guarantee.vo.RestResultVO;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +22,23 @@ public class TgZbsRestController {
 
     @Resource
     private TgZbsService tgZbsService;
+
+    @PassToken
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public Object login(String userName, String password) {
+        if (StringUtils.isEmpty(userName) || StringUtils.isEmpty(password)) {
+            return RestResultVO.error("用户名或密码不能为空");
+        }
+        Map<String, Object> map = tgZbsService.getUserByName(userName);
+        if (map == null) {
+            return RestResultVO.error("用户不存在");
+        }
+        String nccPassword = (String) map.get("nccPassword");
+        if (!password.equals(nccPassword)) {
+            return RestResultVO.error("密码错误");
+        }
+        return RestResultVO.success(JWTTokenUtil.getToken(userName));
+    }
 
     @RequestMapping(value = "/cust/list", method = RequestMethod.GET)
     public Object getCustomerList(String custName, Integer currPage, Integer pageSize) {
@@ -110,13 +131,15 @@ public class TgZbsRestController {
     }
 
     @RequestMapping(value = "/tem/save", method = RequestMethod.POST)
-    public Object temSave(String temJson, String nurbsJosn) {
-        return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJosn));
+    public Object temSave(String temJson, String nurbsJosn, HttpServletRequest request) {
+        String userName = (String) request.getAttribute("userName");
+        return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJosn, userName));
     }
 
     @RequestMapping(value = "/multi/save", method = RequestMethod.POST)
-    public Object batchSave(String headJson, String bodyJson, String refJson) {
-        return RestResultVO.success(tgZbsService.multiSave(headJson, bodyJson, refJson));
+    public Object batchSave(String headJson, String bodyJson, String refJson, HttpServletRequest request) {
+        String userName = (String) request.getAttribute("userName");
+        return RestResultVO.success(tgZbsService.multiSave(headJson, bodyJson, refJson, userName));
     }
 
     @RequestMapping(value = "/elem/limits", method = RequestMethod.GET)

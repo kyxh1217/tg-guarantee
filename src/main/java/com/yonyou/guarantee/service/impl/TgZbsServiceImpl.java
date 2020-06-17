@@ -270,11 +270,11 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     @Transactional
-    public int temSave(String temJson, String nurbsJosn) {
+    public int temSave(String temJson, String nurbsJosn, String userName) {
         JSONObject tem = JSONObject.parseObject(temJson);
         String id = tem.getString("ID");
         if (StringUtils.isEmpty(id)) {
-            return insertTem(temJson, nurbsJosn);
+            return insertTem(temJson, nurbsJosn, userName);
         } else {
             return updateTem(temJson, nurbsJosn);
         }
@@ -298,7 +298,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         }
         String sql = "SELECT t1.ID,t1.cMFNo,t1.cStellGrade " +
                 " FROM SteelTem t1,(" + innerSQL + ") t2 " +
-                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
+                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID DESC";
         params.add((currPage - 1) * pageSize);
         return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
     }
@@ -321,11 +321,11 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     @Transactional
-    public int multiSave(String headJson, String bodyJson, String refJson) {
+    public int multiSave(String headJson, String bodyJson, String refJson, String userName) {
         JSONObject head = JSONObject.parseObject(headJson);
         String id = head.getString("ID");
         if (StringUtils.isEmpty(id)) {
-            return insertBatch(headJson, bodyJson, refJson);
+            return insertBatch(headJson, bodyJson, refJson, userName);
         } else {
             return updateBatch(headJson, bodyJson, refJson);
         }
@@ -355,7 +355,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         }
         String sql = "SELECT t1.ID,t1.cCertificateNo,t1.cStellGrade,t1.cCustomer,SUBSTRING(CONVERT(VARCHAR(10),t1.dDate,120),1,10) dDate " +
                 " FROM NccMILLTest t1,(" + innerSQL + ") t2 " +
-                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
+                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID DESC";
         params.add((currPage - 1) * pageSize);
         return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
     }
@@ -451,7 +451,13 @@ public class TgZbsServiceImpl implements TgZbsService {
         return pdfUtils.genMultiPdf(head, ref, batchList);
     }
 
-    private int insertTem(String temJson, String nurbsJosn) {
+    @Override
+    public Map<String, Object> getUserByName(String userName) {
+        return tgBaseDAO.executeQueryMap("SELECT t.cUserID,t.cUserName,t.nccPassword FROM  US_User t where t.cUserID=?",
+                new Object[]{userName}, DbType.DB_ZBS);
+    }
+
+    private int insertTem(String temJson, String nurbsJosn, String userName) {
         JSONObject tem = JSONObject.parseObject(temJson);
         Set<String> keySet = tem.keySet();
         List<String> keyList = new ArrayList<>();
@@ -464,6 +470,8 @@ public class TgZbsServiceImpl implements TgZbsService {
             }
             if (key.equalsIgnoreCase("cCertificateNO")) {
                 valueList.add(cCertificateNO);
+            } else if (key.equalsIgnoreCase("cOperator")) {
+                valueList.add(userName);
             } else {
                 valueList.add(tem.get(key));
             }
@@ -479,7 +487,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         return 0;
     }
 
-    private int insertBatch(String headForm, String bodyJson, String refJson) {
+    private int insertBatch(String headForm, String bodyJson, String refJson, String userName) {
         JSONObject head = JSONObject.parseObject(headForm);
         Set<String> keySet = head.keySet();
         List<String> keyList = new ArrayList<>();
@@ -492,6 +500,8 @@ public class TgZbsServiceImpl implements TgZbsService {
             }
             if (key.equalsIgnoreCase("cCertificateNo")) {
                 valueList.add(cCertificateNO);
+            } else if (key.equalsIgnoreCase("cOperator")) {
+                valueList.add(userName);
             } else {
                 valueList.add(head.get(key));
             }

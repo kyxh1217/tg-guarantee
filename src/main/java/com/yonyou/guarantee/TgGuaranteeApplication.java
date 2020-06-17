@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 
 
-@ServletComponentScan(basePackages = {"com.yonyou.guarantee.configs"})
+@ServletComponentScan(basePackages = {"com.yonyou.guarantee"})
 @SpringBootApplication
 public class TgGuaranteeApplication {
 

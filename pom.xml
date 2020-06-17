@@ -18,6 +18,7 @@
         <java.version>1.8</java.version>
         <itext.version>7.1.10</itext.version>
         <html2pdf.version>2.1.7</html2pdf.version>
+        <jwt.version>3.10.1</jwt.version>
     </properties>
 
     <dependencies>
@@ -75,6 +76,11 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>html2pdf</artifactId>
             <version>${html2pdf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>${jwt.version}</version>
         </dependency>
     </dependencies>
 

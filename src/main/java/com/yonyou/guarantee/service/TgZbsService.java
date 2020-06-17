@@ -124,7 +124,7 @@ public interface TgZbsService {
      * @param nurbsJosn nurbsJosn
      * @return int
      */
-    int temSave(String temJson, String nurbsJosn);
+    int temSave(String temJson, String nurbsJosn,String userName);
 
 
     /**
@@ -159,7 +159,7 @@ public interface TgZbsService {
      * @param refJson  refJson
      * @return int
      */
-    int multiSave(String headJson, String bodyJson, String refJson);
+    int multiSave(String headJson, String bodyJson, String refJson, String userName);
 
     /**
      * 查询质保书列表
@@ -203,4 +203,6 @@ public interface TgZbsService {
     String genSinglePdf(String id) throws IOException;
 
     String genMultiPdf(String id) throws IOException;
+
+    Map<String, Object> getUserByName(String userName);
 }
