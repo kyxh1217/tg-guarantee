@@ -223,8 +223,10 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     public String getNextTemNum() {
-        Map<String, Object> map = tgBaseDAO.executeQueryMap("SELECT NEXT VALUE FOR temSeq", null, DbType.DB_ZBS);
-        Integer seq = (Integer) map.get("");
+        //Map<String, Object> map = tgBaseDAO.executeQueryMap("SELECT NEXT VALUE FOR temSeq", null, DbType.DB_ZBS);
+        Map<String, Object> map = tgBaseDAO.executeQueryMap("Declare @NewSeqVal int;Exec @NewSeqVal =  P_GetNewSeqVal_SeqT_0101001;" +
+                "select @NewSeqVal  as mySeq;", null, DbType.DB_ZBS);
+        Integer seq = (Integer) map.get("mySeq");
         return String.format("%08d", seq);
     }
 
