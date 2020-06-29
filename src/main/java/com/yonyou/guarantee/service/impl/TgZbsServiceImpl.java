@@ -231,7 +231,7 @@ public class TgZbsServiceImpl implements TgZbsService {
     }
 
     @Override
-    public List<Map<String, Object>> getQtList(String searchText, int currPage, int pageSize) {
+    public List<Map<String, Object>> getQtList(String cMFNo, String cStellGrade, int currPage, int pageSize) {
         String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY a.requestid DESC) n,a.requestid, d.status, dep.departmentname, HR.LASTNAME wuhuaName, isnull( HR1.lastname, '' ) qtName, lphn AS cMFNo, " +
                 "e.ganghao cStellGrade, gg AS cSpec, zxss AS cCertalPoro, dxpx AS cPatternSegre, at AS A_T, ah AS A_H, bt AS B_T, " +
                 " bh AS B_H, ct AS C_T, ch AS C_H, dt AS D_T, dh AS D_H, ttc AS cDecarb, thyd AS cAnnealed, gjthbjyd AS cEuectic,  " +
@@ -241,10 +241,13 @@ public class TgZbsServiceImpl implements TgZbsService {
                 " ON a.cjjyy= HR1.ID LEFT JOIN hrmresource HR2 ON a.cjgjyy = HR1.ID LEFT JOIN hrmdepartment dep ON a.sjbm= dep.id LEFT JOIN workflow_requestbase d ON a.requestid = d.requestid LEFT JOIN uf_gh e ON a.xgh= e.id " +
                 " WHERE d.currentnodetype <> 0  AND sfhg = '1'";
         List<Object> params = new ArrayList<>();
-        if (!StringUtils.isEmpty(searchText)) {
-            innerSQL = innerSQL + " AND (lphn like ? or e.ganghao like ?)";
-            params.add("%" + searchText + "%");
-            params.add("%" + searchText + "%");
+        if (!StringUtils.isEmpty(cMFNo)) {
+            innerSQL = innerSQL + " AND lphn like ? )";
+            params.add("%" + cMFNo + "%");
+        }
+        if (!StringUtils.isEmpty(cMFNo)) {
+            innerSQL = innerSQL + " AND  e.ganghao like ?";
+            params.add("%" + cStellGrade + "%");
         }
         String sql = "SELECT *  FROM (" + innerSQL + ") t1 WHERE t1.n > ? ORDER BY t1.n";
         params.add((currPage - 1) * pageSize);
@@ -252,16 +255,20 @@ public class TgZbsServiceImpl implements TgZbsService {
     }
 
     @Override
-    public Integer getQtListCount(String searchText) {
+    public Integer getQtListCount(String cMFNo, String cStellGrade) {
         String sql = "SELECT count(1) count FROM formtable_main_72 A LEFT JOIN hrmresource HR ON A.lhjyy= HR.ID LEFT JOIN hrmresource HR1 " +
                 " ON a.cjjyy= HR1.ID LEFT JOIN hrmresource HR2 ON a.cjgjyy = HR1.ID LEFT JOIN hrmdepartment dep ON a.sjbm= dep.id" +
                 " LEFT JOIN workflow_requestbase d ON a.requestid = d.requestid LEFT JOIN uf_gh e ON a.xgh= e.id " +
                 " WHERE d.currentnodetype <> 0  AND sfhg = '1'";
+
         List<Object> params = new ArrayList<>();
-        if (!StringUtils.isEmpty(searchText)) {
-            sql = sql + " AND (lphn like ? or e.ganghao like ?)";
-            params.add("%" + searchText + "%");
-            params.add("%" + searchText + "%");
+        if (!StringUtils.isEmpty(cMFNo)) {
+            sql = sql + " AND lphn like ? )";
+            params.add("%" + cMFNo + "%");
+        }
+        if (!StringUtils.isEmpty(cMFNo)) {
+            sql = sql + " AND  e.ganghao like ?";
+            params.add("%" + cStellGrade + "%");
         }
         Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_OA);
         if (map == null) {

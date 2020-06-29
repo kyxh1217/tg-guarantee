@@ -102,20 +102,22 @@ public interface TgZbsService {
     /**
      * 查询客户列表
      *
-     * @param searchText 客户名称
-     * @param currPage   当前页码
-     * @param pageSize   pageSize
+     * @param cMFNo       客户名称
+     * @param cStellGrade 客户名称
+     * @param currPage    当前页码
+     * @param pageSize    pageSize
      * @return list
      */
-    List<Map<String, Object>> getQtList(String searchText, int currPage, int pageSize);
+    List<Map<String, Object>> getQtList(String cMFNo, String cStellGrade, int currPage, int pageSize);
 
     /**
      * 查询客户数据
      *
-     * @param searchText 客户名称
+     * @param cMFNo       客户名称
+     * @param cStellGrade 客户名称
      * @return int
      */
-    Integer getQtListCount(String searchText);
+    Integer getQtListCount(String cMFNo, String cStellGrade);
 
     /**
      * 保存质保书
@@ -124,7 +126,7 @@ public interface TgZbsService {
      * @param nurbsJosn nurbsJosn
      * @return int
      */
-    int temSave(String temJson, String nurbsJosn,String userName);
+    int temSave(String temJson, String nurbsJosn, String userName);
 
 
     /**

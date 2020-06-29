@@ -121,11 +121,11 @@ public class TgZbsRestController {
     }
 
     @RequestMapping(value = "/qt/list", method = RequestMethod.GET)
-    public Object getQtList(String searchText, Integer currPage, Integer pageSize) {
+    public Object getQtList(String cMFNo, String cStellGrade, Integer currPage, Integer pageSize) {
         currPage = null == currPage ? 1 : currPage;
         pageSize = null == pageSize ? 10 : pageSize;
-        List<Map<String, Object>> dataList = tgZbsService.getQtList(searchText, currPage, pageSize);
-        int total = tgZbsService.getQtListCount(searchText);
+        List<Map<String, Object>> dataList = tgZbsService.getQtList(cMFNo, cStellGrade, currPage, pageSize);
+        int total = tgZbsService.getQtListCount(cMFNo, cStellGrade);
         PageRespVO pageRespVO = new PageRespVO.Builder().total(total).addList(dataList).create();
         return RestResultVO.success(pageRespVO);
     }
