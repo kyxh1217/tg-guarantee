@@ -26,7 +26,7 @@ spring:
     password: 123qwe
   second-datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://103.228.161.147:1433;database=ecology_tg;sendStringParametersAsUnicode=true;responseBuffering=adaptive
+    url: jdbc:sqlserver://112.33.100.180:1433;database=ecology_tg;sendStringParametersAsUnicode=true;responseBuffering=adaptive
     username: sa
     password: Tiangong@2020
   http:

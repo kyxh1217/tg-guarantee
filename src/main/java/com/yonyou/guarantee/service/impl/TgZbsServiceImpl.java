@@ -242,7 +242,7 @@ public class TgZbsServiceImpl implements TgZbsService {
                 " WHERE d.currentnodetype <> 0  AND sfhg = '1'";
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isEmpty(cMFNo)) {
-            innerSQL = innerSQL + " AND lphn like ? )";
+            innerSQL = innerSQL + " AND lphn like ? ";
             params.add("%" + cMFNo + "%");
         }
         if (!StringUtils.isEmpty(cMFNo)) {
@@ -263,7 +263,7 @@ public class TgZbsServiceImpl implements TgZbsService {
 
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isEmpty(cMFNo)) {
-            sql = sql + " AND lphn like ? )";
+            sql = sql + " AND lphn like ? ";
             params.add("%" + cMFNo + "%");
         }
         if (!StringUtils.isEmpty(cMFNo)) {
