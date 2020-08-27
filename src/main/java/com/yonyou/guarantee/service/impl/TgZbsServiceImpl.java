@@ -55,7 +55,8 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     public List<Map<String, Object>> getStandardList() {
-        return tgBaseDAO.executeQueryList("select t.id,rtrim(t.cStand) cStand from Standard t where ISNULL(cStand,'')<>'' ORDER BY t.id", null, DbType.DB_ZBS);
+        // return tgBaseDAO.executeQueryList("select t.id,rtrim(t.cStand) cStand from Standard t where ISNULL(cStand,'')<>'' ORDER BY t.id", null, DbType.DB_ZBS);
+        return tgBaseDAO.executeQueryList("select t.id,rtrim(t.cBaseName) cStand from baseinfo t where t.iType=0 ORDER BY t.ID", null, DbType.DB_ZBS);
     }
 
     @Override
@@ -239,7 +240,7 @@ public class TgZbsServiceImpl implements TgZbsService {
                 " jld AS cGrainSize, csbts AS cUltrasonic, lhjyrq AS lhjyrq, cjzjrq AS qtDate, bmzl AS cSurFace, chhhyd AS cQuenched,  " +
                 " pp  FROM formtable_main_72 A LEFT JOIN hrmresource HR ON A.lhjyy= HR.ID LEFT JOIN hrmresource HR1 " +
                 " ON a.cjjyy= HR1.ID LEFT JOIN hrmresource HR2 ON a.cjgjyy = HR1.ID LEFT JOIN hrmdepartment dep ON a.sjbm= dep.id LEFT JOIN workflow_requestbase d ON a.requestid = d.requestid LEFT JOIN uf_gh e ON a.xgh= e.id " +
-                " WHERE d.currentnodetype <> 0  AND sfhg = '1'";
+                " WHERE d.currentnodetype <> 0 ";
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isEmpty(cMFNo)) {
             innerSQL = innerSQL + " AND lphn like ? ";
@@ -259,7 +260,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         String sql = "SELECT count(1) count FROM formtable_main_72 A LEFT JOIN hrmresource HR ON A.lhjyy= HR.ID LEFT JOIN hrmresource HR1 " +
                 " ON a.cjjyy= HR1.ID LEFT JOIN hrmresource HR2 ON a.cjgjyy = HR1.ID LEFT JOIN hrmdepartment dep ON a.sjbm= dep.id" +
                 " LEFT JOIN workflow_requestbase d ON a.requestid = d.requestid LEFT JOIN uf_gh e ON a.xgh= e.id " +
-                " WHERE d.currentnodetype <> 0  AND sfhg = '1'";
+                " WHERE d.currentnodetype <> 0 ";
 
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isEmpty(cMFNo)) {
@@ -447,7 +448,21 @@ public class TgZbsServiceImpl implements TgZbsService {
             nurbsList.forEach(item -> tem.put((String) item.get("cElem"), item.get("dValues")));
         }
         String iSteelType = String.valueOf(tem.get("iSteelType"));
+        tem.put("dPiece", doubleToString((Double) tem.get("dPiece")));
+        tem.put("dWeight", doubleToString((Double) tem.get("dWeight")));
         return pdfUtils.genSinglePdf(tem, "1".equals(iSteelType) ? "TGY" : "TGB");
+    }
+
+    private String doubleToString(Double d) {
+        if (null == d || d == 0) {
+            return "";
+        } else {
+            String dStr = String.valueOf(d);
+            if (dStr.endsWith(".0")) {
+                dStr = dStr.substring(0, dStr.length() - 2);
+            }
+            return dStr;
+        }
     }
 
     @Override
