@@ -2,6 +2,7 @@ package com.yonyou.guarantee.constants;
 
 public enum ReturnCode {
     SUCCESS("1"),
+    TOKEN_INVALID("-1"),
     ERR0R("0");
 
     private String code;

@@ -24,11 +24,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 @PropertySource(value = "classpath:config/setting.properties")
@@ -38,7 +34,8 @@ public class PdfUtils {
     @Value("${tg.pdf.url}")
     private String pdfUrl;
     private final static int PDF_PAGE_SIZE = 9;
-    private final static String[] NURB_KEYS = new String[]{"C", "Si", "Mn", "P", "S", "W", "Mo", "Cr", "V", "Cu", "Ni","Co","Al","Pb","Sn"};
+    private final static String[] NURB_KEYS = new String[]{"C", "Si", "Mn", "P", "S", "W", "Mo", "Cr", "V", "Cu", "Ni", "Co", "Al", "Pb", "Sn"};
+    private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn"};
 
     public String genSinglePdf(Map<String, Object> map, String certPrefix) throws IOException {
         PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtils.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
@@ -48,16 +45,21 @@ public class PdfUtils {
         //1、创建pdf文件
         PdfDocument pdf = new PdfDocument(pdfReader, pdfWriter);
         //2、创建中文字体
-        //PdfFont f2 = null;
-        // f2 = PdfFontFactory.createFont("STSong-Light", "UniGB-UCS2-H", true);
         PdfFont f2 = PdfFontFactory.createFont(PdfUtils.class.getResource("/font").getPath() + "/SimSun.ttf", PdfEncodings.IDENTITY_H, true);
-        // PdfFontFactory.createFont("ADOBESONGSTD-LIGHT.OTF", PdfEncodings.IDENTITY_H,true);
         pdf.addFont(f2);
 
         //3、获取pdf模板中的域值信息
         PdfAcroForm form = PdfAcroForm.getAcroForm(pdf, true);
         Map<String, PdfFormField> fieldMap = form.getFormFields();
         String cCertificateNO = "";
+        Arrays.stream(ADDITIONAL_KEYS).forEach(key -> {
+            Double v = (Double) map.get(key);
+            if (v != null && v != 0) {
+                map.put("label" + key, key);
+            } else {
+                map.remove(key);
+            }
+        });
         for (String key : map.keySet()) {
             String value = map.get(key) == null ? null : map.get(key).toString();
             PdfFormField formField = fieldMap.get(key);

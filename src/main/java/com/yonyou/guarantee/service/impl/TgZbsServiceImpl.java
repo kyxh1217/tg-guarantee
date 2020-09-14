@@ -163,7 +163,7 @@ public class TgZbsServiceImpl implements TgZbsService {
             innerSQL = innerSQL + " AND cCusName=?";
             params.add(custName);
         }
-        String sql = "SELECT t1.ID,t1.cCusName,t1.cCertificateNO,SUBSTRING(CONVERT(VARCHAR(10),t1.dDate,120),1,10) dDate,t1.cMFNo,t1.cStellGrade " +
+        String sql = "SELECT t1.ID,t1.cCusName,t1.cCertificateNO,SUBSTRING(CONVERT(VARCHAR(10),t1.dDate,120),1,10) dDate,t1.billDate,t1.cMFNo,t1.cStellGrade " +
                 " FROM NccSteelTem t1,(" + innerSQL + ") t2 " +
                 " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID desc";
         params.add((currPage - 1) * pageSize);
@@ -209,7 +209,7 @@ public class TgZbsServiceImpl implements TgZbsService {
                 " t.cSurFace,t.cUltrasonic,t.cPlane,t.cSide,t.cMicrostru,t.cSegregation,t.cThickness,t.cWithd,t.cStraightness," +
                 " t.cCarbide,t.cTensile,t.cShrinkage,t.cMacStructure,t.cGrainSize,t.cContacts,RTRIM(t.A_T) A_T,RTRIM(t.A_H) A_H," +
                 " RTRIM(t.B_T) B_T,RTRIM(t.B_H) B_H,RTRIM(t.C_H) C_H,RTRIM(t.C_T) C_T," +
-                " RTRIM(t.D_H) D_H,RTRIM(t.D_T) D_T,t.QRCode,t.cSampleNo,t.cOperator,t.cSign,t.bupload" +
+                " RTRIM(t.D_H) D_H,RTRIM(t.D_T) D_T,t.QRCode,t.cSampleNo,t.cOperator,t.cSign,t.bupload,t.billDate" +
                 " FROM NccSteelTem t where t.ID=?";
         Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, new Object[]{id}, DbType.DB_ZBS);
         List<Map<String, Object>> nurbsList = null;

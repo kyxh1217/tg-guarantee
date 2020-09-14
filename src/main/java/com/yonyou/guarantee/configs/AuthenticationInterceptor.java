@@ -8,6 +8,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.yonyou.guarantee.annotation.PassToken;
 import com.yonyou.guarantee.common.JWTTokenUtil;
 import com.yonyou.guarantee.common.OkHttpUtil;
+import com.yonyou.guarantee.constants.ReturnCode;
 import com.yonyou.guarantee.vo.RestResultVO;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -38,7 +39,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         String token = httpServletRequest.getHeader("Authorization");// 从 http 请求头中取出 token
         // 执行认证
         if (token == null) {
-            OkHttpUtil.respJsonToClient(httpServletResponse, JSON.toJSONString(RestResultVO.error("无token，请重新登录")));
+            tokenNotPassed(httpServletResponse, "无token，请重新登录");
             return false;
         }
         // 获取 token 中的 user id
@@ -46,7 +47,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             DecodedJWT decodeToken = JWT.decode(token);
             Claim expireTime = decodeToken.getClaim("expireTime");
             if (null == expireTime || JWTTokenUtil.isTokenExpired(expireTime.asLong())) {
-                OkHttpUtil.respJsonToClient(httpServletResponse, JSON.toJSONString(RestResultVO.error("Token过期了")));
+                tokenNotPassed(httpServletResponse, "Token过期了，请重新登录");
                 return false;
             }
             Claim userName = decodeToken.getClaim("userName");
@@ -58,9 +59,16 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         // 验证 token
         Map<String, Claim> map = JWTTokenUtil.verifyToken(token);
         if (null == map) {
-            OkHttpUtil.respJsonToClient(httpServletResponse, JSON.toJSONString(RestResultVO.error("非法的token")));
+            tokenNotPassed(httpServletResponse, "非法的token，请重新登录");
             return false;
         }
         return true;
+    }
+
+    private void tokenNotPassed(HttpServletResponse httpServletResponse, String s) {
+        RestResultVO<String> vo = new RestResultVO<>();
+        vo.setCode(ReturnCode.TOKEN_INVALID.getCode());
+        vo.setMsg(s);
+        OkHttpUtil.respJsonToClient(httpServletResponse, JSON.toJSONString(vo));
     }
 }
