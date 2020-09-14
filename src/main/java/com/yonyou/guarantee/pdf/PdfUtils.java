@@ -35,7 +35,7 @@ public class PdfUtils {
     private String pdfUrl;
     private final static int PDF_PAGE_SIZE = 9;
     private final static String[] NURB_KEYS = new String[]{"C", "Si", "Mn", "P", "S", "W", "Mo", "Cr", "V", "Cu", "Ni", "Co", "Al", "Pb", "Sn"};
-    private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn"};
+    private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn", "Ti", "B"};
 
     public String genSinglePdf(Map<String, Object> map, String certPrefix) throws IOException {
         PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtils.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
@@ -52,14 +52,18 @@ public class PdfUtils {
         PdfAcroForm form = PdfAcroForm.getAcroForm(pdf, true);
         Map<String, PdfFormField> fieldMap = form.getFormFields();
         String cCertificateNO = "";
-        Arrays.stream(ADDITIONAL_KEYS).forEach(key -> {
+        int eCount = 0;
+        for (String key : ADDITIONAL_KEYS) {
+            if (eCount >= 4) break;
             Double v = (Double) map.get(key);
             if (v != null && v != 0) {
-                map.put("label" + key, key);
+                map.put("label_e" + eCount, key);
+                map.put("e" + eCount, v);
+                eCount++;
             } else {
                 map.remove(key);
             }
-        });
+        }
         for (String key : map.keySet()) {
             String value = map.get(key) == null ? null : map.get(key).toString();
             PdfFormField formField = fieldMap.get(key);
