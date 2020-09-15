@@ -6,6 +6,8 @@ import com.yonyou.guarantee.constants.DbType;
 import com.yonyou.guarantee.dao.ZbsDAO;
 import com.yonyou.guarantee.pdf.PdfUtils;
 import com.yonyou.guarantee.service.TgZbsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -25,6 +27,7 @@ public class TgZbsServiceImpl implements TgZbsService {
     private ZbsDAO tgBaseDAO;
     @Resource
     private PdfUtils pdfUtils;
+    private final static Logger logger = LoggerFactory.getLogger(TgZbsServiceImpl.class);
 
     @Override
     public List<Map<String, Object>> getCustomerList(String custName, int currPage, int pageSize) {
@@ -106,10 +109,21 @@ public class TgZbsServiceImpl implements TgZbsService {
                 " t.cCarbide,t.cTensile,t.cShrinkage,t.cMacStructure,t.cGrainSize,t.cContacts,RTRIM(t.A_T) A_T,RTRIM(t.A_H) A_H," +
                 " RTRIM(t.B_T) B_T,RTRIM(t.B_H) B_H,RTRIM(t.C_H) C_H,RTRIM(t.C_T) C_T," +
                 " RTRIM(t.D_H) D_H,RTRIM(t.D_T) D_T,t.QRCode,t.cSampleNo,t.cOperator,t.cSign,t.bupload";
-        String whereSql = " where t.cMFNo=? and t.cStellGrade=? and t.cCusName=? and t.iSteelType=? ORDER BY t.ID desc";
-        Object[] params = new Object[]{cMFNo, cStellGrade, cCusName, iSteelType};
+        String whereSql = " where t.iSteelType=? and t.cMFNo=?";
+        List<String> paramList = new ArrayList<>();
+        paramList.add(iSteelType);
+        paramList.add(cMFNo);
+        if (!StringUtils.isEmpty(cCusName)) {
+            whereSql += " and t.cCusName=?";
+            paramList.add(cCusName);
+        }
+        if (!StringUtils.isEmpty(cStellGrade)) {
+            whereSql += " and t.cStellGrade=?";
+            paramList.add(cStellGrade);
+        }
+        whereSql += " ORDER BY t.ID desc";
         Map<String, Object> map = tgBaseDAO.executeQueryMap("SELECT TOP 1 " + colSql + " FROM NccSteelTem t" + whereSql,
-                params, DbType.DB_ZBS);
+                paramList.toArray(), DbType.DB_ZBS);
         Map<String, Object> temMap = null;
         List<Map<String, Object>> nurbsList;
         // 2.如果新表中有数据，则查询相关历史数据
@@ -120,7 +134,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         } else {
             // 3.从旧表中查询记录
             map = tgBaseDAO.executeQueryMap("SELECT TOP 1 t.cSign+t.cCertificateNO as temId," + colSql + " FROM SteelTem t " + whereSql,
-                    params, DbType.DB_ZBS);
+                    paramList.toArray(), DbType.DB_ZBS);
             // 4.如果旧表中有数据则查询相关历史数据
             if (map != null) {
                 temMap = map;
@@ -130,8 +144,6 @@ public class TgZbsServiceImpl implements TgZbsService {
                 // 5.最终从相关数据表中查询数据
                 nurbsList = tgBaseDAO.executeQueryList("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from" +
                         " SteelTemNurbs t where t.cCertificateNO=?", new Object[]{cMFNo}, DbType.DB_ZBS);
-                // todo 从流程中获取
-
             }
         }
         Map<String, Object> retMap = new HashMap<>();
@@ -453,6 +465,20 @@ public class TgZbsServiceImpl implements TgZbsService {
         return pdfUtils.genSinglePdf(tem, "1".equals(iSteelType) ? "TGY" : "TGB");
     }
 
+    private void saveCustomer(String cCusName) {
+        try {
+            Map<String, Object> map = tgBaseDAO.executeQueryMap("select ID FROM Customer where cCusName=?", new Object[]{cCusName}, DbType.DB_ZBS);
+            if (map == null) {
+                tgBaseDAO.executeUpdate("insert into Customer (cCusCode,cCusName,cCusAbbName) VALUES(?,?,?)", new Object[]{
+                        "NCC" + this.getNextTemNum(), cCusName, cCusName
+                }, DbType.DB_ZBS);
+            }
+        } catch (Exception e) {
+            logger.error("保存客户信息错误:" + e.getMessage());
+        }
+
+    }
+
     private String doubleToString(Double d) {
         if (null == d || d == 0) {
             return "";
@@ -505,9 +531,10 @@ public class TgZbsServiceImpl implements TgZbsService {
         String insertSql = "insert into NccSteelTem (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")";
         Integer id = tgBaseDAO.insert(insertSql, valueList.toArray(), DbType.DB_ZBS);
         JSONObject nurbs = JSONObject.parseObject(nurbsJosn);
-        keySet = JSONObject.parseObject(nurbsJosn).keySet();
+        keySet = nurbs.keySet();
         keySet.forEach(key -> tgBaseDAO.insert("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
                 new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
+        this.saveCustomer(tem.getString("cCusName"));
         return 0;
     }
 
