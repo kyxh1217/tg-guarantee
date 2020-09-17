@@ -91,7 +91,13 @@ public interface TgZbsService {
      * @return map
      */
     Map<String, Object> getTemById(String id);
-
+    /**
+     * getTemById
+     *
+     * @param id id
+     * @return map
+     */
+    boolean delTemById(String id);
     /**
      * 获取质保书编号
      *

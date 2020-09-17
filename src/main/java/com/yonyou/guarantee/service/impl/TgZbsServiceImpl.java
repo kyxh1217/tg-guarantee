@@ -235,6 +235,17 @@ public class TgZbsServiceImpl implements TgZbsService {
     }
 
     @Override
+    public boolean delTemById(String id) {
+        try {
+            tgBaseDAO.executeQueryMap("delete FROM NccSteelTem t where t.ID=?", new Object[]{id}, DbType.DB_ZBS);
+            tgBaseDAO.executeQueryList("delete from NccSteelTemNurbs t where t.temId=?", new Object[]{id}, DbType.DB_ZBS);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
     public String getNextTemNum() {
         //Map<String, Object> map = tgBaseDAO.executeQueryMap("SELECT NEXT VALUE FOR temSeq", null, DbType.DB_ZBS);
         Map<String, Object> map = tgBaseDAO.executeQueryMap("Declare @NewSeqVal int;Exec @NewSeqVal =  P_GetNewSeqVal_SeqT_0101001;" +
@@ -535,7 +546,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         keySet.forEach(key -> tgBaseDAO.insert("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
                 new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
         this.saveCustomer(tem.getString("cCusName"));
-        return 0;
+        return id;
     }
 
     private int insertBatch(String headForm, String bodyJson, String refJson, String userName) {
@@ -688,7 +699,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         keySet = JSONObject.parseObject(nurbsJosn).keySet();
         keySet.forEach(key -> tgBaseDAO.insert("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
                 new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
-        return 0;
+        return Integer.parseInt(id);
     }
 
     private Integer getTemIdByCertificateNO(String cCertificateNO) {

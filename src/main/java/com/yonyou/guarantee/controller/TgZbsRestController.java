@@ -110,6 +110,11 @@ public class TgZbsRestController {
         return RestResultVO.success(tgZbsService.getTemById(id));
     }
 
+    @RequestMapping(value = "/tem/del", method = RequestMethod.GET)
+    public Object delTemById(String id) {
+        return RestResultVO.success(tgZbsService.delTemById(id));
+    }
+
     @RequestMapping(value = "/multi/id", method = RequestMethod.GET)
     public Object getMultiById(String id) {
         return RestResultVO.success(tgZbsService.getMultiById(id));
