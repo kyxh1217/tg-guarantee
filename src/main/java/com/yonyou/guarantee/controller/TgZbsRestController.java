@@ -1,5 +1,6 @@
 package com.yonyou.guarantee.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.yonyou.guarantee.annotation.PassToken;
 import com.yonyou.guarantee.common.JWTTokenUtil;
 import com.yonyou.guarantee.service.TgZbsService;
@@ -37,7 +38,10 @@ public class TgZbsRestController {
         if (!password.equals(nccPassword)) {
             return RestResultVO.error("密码错误");
         }
-        return RestResultVO.success(JWTTokenUtil.getToken(userName));
+        JSONObject json = new JSONObject();
+        json.put("cUserName", map.get("cUserName"));
+        json.put("token", JWTTokenUtil.getToken(userName));
+        return RestResultVO.success(json);
     }
 
     @RequestMapping(value = "/cust/list", method = RequestMethod.GET)
@@ -136,9 +140,9 @@ public class TgZbsRestController {
     }
 
     @RequestMapping(value = "/tem/save", method = RequestMethod.POST)
-    public Object temSave(String temJson, String nurbsJosn, HttpServletRequest request) {
+    public Object temSave(String temJson, String nurbsJson, HttpServletRequest request) {
         String userName = (String) request.getAttribute("userName");
-        return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJosn, userName));
+        return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJson, userName));
     }
 
     @RequestMapping(value = "/multi/save", method = RequestMethod.POST)

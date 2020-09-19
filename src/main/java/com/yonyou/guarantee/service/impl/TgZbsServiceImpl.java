@@ -237,8 +237,8 @@ public class TgZbsServiceImpl implements TgZbsService {
     @Override
     public boolean delTemById(String id) {
         try {
-            tgBaseDAO.executeQueryMap("delete FROM NccSteelTem t where t.ID=?", new Object[]{id}, DbType.DB_ZBS);
-            tgBaseDAO.executeQueryList("delete from NccSteelTemNurbs t where t.temId=?", new Object[]{id}, DbType.DB_ZBS);
+            tgBaseDAO.executeUpdate("delete FROM NccSteelTem  where ID=?", new Object[]{id}, DbType.DB_ZBS);
+            tgBaseDAO.executeUpdate("delete from NccSteelTemNurbs where temId=?", new Object[]{id}, DbType.DB_ZBS);
             return true;
         } catch (Exception e) {
             return false;
@@ -303,13 +303,13 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     @Transactional
-    public int temSave(String temJson, String nurbsJosn, String userName) {
+    public int temSave(String temJson, String nurbsJson, String userName) {
         JSONObject tem = JSONObject.parseObject(temJson);
         String id = tem.getString("ID");
         if (StringUtils.isEmpty(id)) {
-            return insertTem(temJson, nurbsJosn, userName);
+            return insertTem(temJson, nurbsJson, userName);
         } else {
-            return updateTem(temJson, nurbsJosn);
+            return updateTem(temJson, nurbsJson);
         }
 
     }
@@ -473,7 +473,21 @@ public class TgZbsServiceImpl implements TgZbsService {
         String iSteelType = String.valueOf(tem.get("iSteelType"));
         tem.put("dPiece", doubleToString((Double) tem.get("dPiece")));
         tem.put("dWeight", doubleToString((Double) tem.get("dWeight")));
-        return pdfUtils.genSinglePdf(tem, "1".equals(iSteelType) ? "TGY" : "TGB");
+        String certPrefix;
+        switch (iSteelType) {
+            case "1":
+                certPrefix = "TGY";
+                break;
+            case "2":
+                certPrefix = "TGB";
+                break;
+            case "3":
+                certPrefix = "TGG";
+                break;
+            default:
+                certPrefix = "";
+        }
+        return pdfUtils.genSinglePdf(tem, certPrefix);
     }
 
     private void saveCustomer(String cCusName) {
@@ -518,7 +532,7 @@ public class TgZbsServiceImpl implements TgZbsService {
                 new Object[]{userName}, DbType.DB_ZBS);
     }
 
-    private int insertTem(String temJson, String nurbsJosn, String userName) {
+    private int insertTem(String temJson, String nurbsJson, String userName) {
         JSONObject tem = JSONObject.parseObject(temJson);
         Set<String> keySet = tem.keySet();
         List<String> keyList = new ArrayList<>();
@@ -541,7 +555,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         }
         String insertSql = "insert into NccSteelTem (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")";
         Integer id = tgBaseDAO.insert(insertSql, valueList.toArray(), DbType.DB_ZBS);
-        JSONObject nurbs = JSONObject.parseObject(nurbsJosn);
+        JSONObject nurbs = JSONObject.parseObject(nurbsJson);
         keySet = nurbs.keySet();
         keySet.forEach(key -> tgBaseDAO.insert("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
                 new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
@@ -678,7 +692,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         return 0;
     }
 
-    private int updateTem(String temJson, String nurbsJosn) {
+    private int updateTem(String temJson, String nurbsJson) {
         JSONObject tem = JSONObject.parseObject(temJson);
         String id = tem.getString("ID");
         Set<String> keySet = tem.keySet();
@@ -695,8 +709,8 @@ public class TgZbsServiceImpl implements TgZbsService {
         valueList.add(tem.getString("ID"));
         tgBaseDAO.executeUpdate(updateSql, valueList.toArray(), DbType.DB_ZBS);
         tgBaseDAO.executeUpdate("delete from NccSteelTemNurbs where temId=?", new Object[]{id}, DbType.DB_ZBS);
-        JSONObject nurbs = JSONObject.parseObject(nurbsJosn);
-        keySet = JSONObject.parseObject(nurbsJosn).keySet();
+        JSONObject nurbs = JSONObject.parseObject(nurbsJson);
+        keySet = JSONObject.parseObject(nurbsJson).keySet();
         keySet.forEach(key -> tgBaseDAO.insert("insert into NccSteelTemNurbs (temId,cElem,dValues) values (?,?,?)",
                 new Object[]{id, key, nurbs.get(key)}, DbType.DB_ZBS));
         return Integer.parseInt(id);

@@ -129,10 +129,10 @@ public interface TgZbsService {
      * 保存质保书
      *
      * @param temJson   temJson
-     * @param nurbsJosn nurbsJosn
+     * @param nurbsJson nurbsJson
      * @return int
      */
-    int temSave(String temJson, String nurbsJosn, String userName);
+    int temSave(String temJson, String nurbsJson, String userName);
 
 
     /**
