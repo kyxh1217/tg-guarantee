@@ -35,7 +35,7 @@ public class PdfUtils {
     private String pdfUrl;
     private final static int PDF_PAGE_SIZE = 9;
     private final static String[] NURB_KEYS = new String[]{"C", "Si", "Mn", "P", "S", "W", "Mo", "Cr", "V", "Cu", "Ni", "Co", "Al", "Pb", "Sn"};
-    private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn", "Ti", "B"};
+    private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn", "Ti", "B", "Nb"};
 
     public String genSinglePdf(Map<String, Object> map, String certPrefix) throws IOException {
         PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtils.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
