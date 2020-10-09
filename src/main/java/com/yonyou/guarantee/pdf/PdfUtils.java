@@ -22,9 +22,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Component
 @PropertySource(value = "classpath:config/setting.properties")
@@ -40,8 +45,13 @@ public class PdfUtils {
     public String genSinglePdf(Map<String, Object> map, String certPrefix) throws IOException {
         PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtils.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
 
-        String pdfName = System.currentTimeMillis() + ".pdf";
-        PdfWriter pdfWriter = new PdfWriter(new FileOutputStream(pdfPath + "/" + pdfName));
+        //String pdfName = System.currentTimeMillis() + ".pdf";
+        String pdfName = certPrefix + map.get("cCertificateNO") + ".pdf";
+        File pdfFile = new File(pdfPath + "/" + pdfName);
+        if (pdfFile.exists() && !pdfFile.canWrite()) {
+            throw new IOException("服务器上的文件不可写：" + pdfName);
+        }
+        PdfWriter pdfWriter = new PdfWriter(new FileOutputStream(pdfFile));
         //1、创建pdf文件
         PdfDocument pdf = new PdfDocument(pdfReader, pdfWriter);
         //2、创建中文字体
@@ -55,8 +65,8 @@ public class PdfUtils {
         int eCount = 0;
         for (String key : ADDITIONAL_KEYS) {
             if (eCount >= 4) break;
-            Double v = (Double) map.get(key);
-            if (v != null && v != 0) {
+            String v = (String) map.get(key);
+            if (v != null && !StringUtils.isEmpty(v)) {
                 map.put("label_e" + eCount, key);
                 map.put("e" + eCount, v);
                 eCount++;
@@ -257,5 +267,4 @@ public class PdfUtils {
         return Float.parseFloat(daTable[PdfFormField.DA_SIZE]);
 
     }
-
 }

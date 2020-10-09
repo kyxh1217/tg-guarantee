@@ -8,12 +8,20 @@ import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +33,7 @@ public class ZbsDAO {
 
     private final JdbcTemplate zbsJdbcTemplate;
     private final JdbcTemplate oaJdbcTemplate;
+    private final DecimalFormat formatter = new DecimalFormat("#.#########");
 
     public ZbsDAO(@Qualifier("zbsJdbcTemplate") JdbcTemplate zbsJdbcTemplate, @Qualifier("oaJdbcTemplate") JdbcTemplate oaJdbcTemplate) {
         this.zbsJdbcTemplate = zbsJdbcTemplate;
@@ -40,7 +49,36 @@ public class ZbsDAO {
      * @return
      */
     public List<Map<String, Object>> executeQueryList(String sql, Object[] params, DbType dbType) {
-        return Objects.requireNonNull(getJdbcTemplate(dbType)).queryForList(sql, params);
+        return Objects.requireNonNull(getJdbcTemplate(dbType)).query(sql, params, new RowMapper<Map<String, Object>>() {
+            public Map<String, Object> mapRow(ResultSet rs, int rowNum) throws SQLException {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int columnCount = rsmd.getColumnCount();
+                Map<String, Object> mapOfColumnValues = this.createColumnMap(columnCount);
+
+                for (int i = 1; i <= columnCount; ++i) {
+                    String column = JdbcUtils.lookupColumnName(rsmd, i);
+                    mapOfColumnValues.putIfAbsent(this.getColumnKey(column), this.getColumnValue(rs, i));
+                }
+
+                return mapOfColumnValues;
+            }
+
+            protected Map<String, Object> createColumnMap(int columnCount) {
+                return new LinkedCaseInsensitiveMap(columnCount);
+            }
+
+            protected String getColumnKey(String columnName) {
+                return columnName;
+            }
+
+            @Nullable
+            protected Object getColumnValue(ResultSet rs, int index) throws SQLException {
+                if (rs.getObject(index) instanceof Double) {
+                    return formatter.format(rs.getDouble(index));
+                }
+                return JdbcUtils.getResultSetValue(rs, index);
+            }
+        });
     }
 
     /**

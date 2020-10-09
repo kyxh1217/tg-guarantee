@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -471,8 +472,8 @@ public class TgZbsServiceImpl implements TgZbsService {
             nurbsList.forEach(item -> tem.put((String) item.get("cElem"), item.get("dValues")));
         }
         String iSteelType = String.valueOf(tem.get("iSteelType"));
-        tem.put("dPiece", doubleToString((Double) tem.get("dPiece")));
-        tem.put("dWeight", doubleToString((Double) tem.get("dWeight")));
+        tem.put("dPiece", tem.get("dPiece"));
+        tem.put("dWeight",  tem.get("dWeight"));
         String certPrefix;
         switch (iSteelType) {
             case "1":
@@ -538,14 +539,11 @@ public class TgZbsServiceImpl implements TgZbsService {
         List<String> keyList = new ArrayList<>();
         List<Object> valueList = new ArrayList<>();
         List<String> holderList = new ArrayList<>();
-        String cCertificateNO = this.getNextTemNum();
         for (String key : keySet) {
             if (key.equalsIgnoreCase("ID")) {
                 continue;
             }
-            if (key.equalsIgnoreCase("cCertificateNO")) {
-                valueList.add(cCertificateNO);
-            } else if (key.equalsIgnoreCase("cOperator")) {
+            if (key.equalsIgnoreCase("cOperator")) {
                 valueList.add(userName);
             } else {
                 valueList.add(tem.get(key));
@@ -723,5 +721,10 @@ public class TgZbsServiceImpl implements TgZbsService {
             return 0;
         }
         return (Integer) map.get("ID");
+    }
+
+
+    public static void main(String[] args) {
+        System.out.println(new DecimalFormat("#.#######").format(0000.00));
     }
 }
