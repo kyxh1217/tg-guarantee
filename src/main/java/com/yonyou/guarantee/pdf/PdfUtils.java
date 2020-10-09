@@ -66,7 +66,7 @@ public class PdfUtils {
         for (String key : ADDITIONAL_KEYS) {
             if (eCount >= 4) break;
             String v = (String) map.get(key);
-            if (v != null && !StringUtils.isEmpty(v)) {
+            if (!StringUtils.isEmpty(v) && !"0".equals(v)) {
                 map.put("label_e" + eCount, key);
                 map.put("e" + eCount, v);
                 eCount++;
