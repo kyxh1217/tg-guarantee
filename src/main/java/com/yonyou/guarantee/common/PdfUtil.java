@@ -34,13 +34,46 @@ import java.util.Objects;
 @Component
 @PropertySource(value = "classpath:config/setting.properties")
 public class PdfUtil {
+    private final static int PDF_PAGE_SIZE = 9;
+    private final static String[] NURB_KEYS = new String[]{"C", "Si", "Mn", "P", "S", "W", "Mo", "Cr", "V", "Cu", "Ni", "Co", "Al", "Pb", "Sn"};
+    private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn", "Ti", "B", "Nb"};
     @Value("${tg.pdf.path}")
     private String pdfPath;
     @Value("${tg.pdf.url}")
     private String pdfUrl;
-    private final static int PDF_PAGE_SIZE = 9;
-    private final static String[] NURB_KEYS = new String[]{"C", "Si", "Mn", "P", "S", "W", "Mo", "Cr", "V", "Cu", "Ni", "Co", "Al", "Pb", "Sn"};
-    private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn", "Ti", "B", "Nb"};
+
+    /**
+     * 1、获取文本框的宽度   注意要减去左右的padding值   值为：PdfFormField.X_OFFSET 2、获取字符串宽度注意字体   需使用中文字体
+     *
+     * @param pdfFont   字体
+     * @param formField 文本域
+     * @param value     文本值
+     * @return textWidth >= valueWidth return true else false
+     */
+    public static boolean compareWidth(PdfFont pdfFont, PdfFormField formField, String value) {
+        //获取当前文本字体大小
+        float fontSize = getFontSize(formField);
+        PdfArray position = formField.getWidgets().get(0).getRectangle();
+        float width = (float) (position.getAsNumber(2).getValue() - position.getAsNumber(0).getValue())
+                - PdfFormField.X_OFFSET * 2;
+
+        //获取当前文本值的宽度
+        float strWidth = pdfFont.getWidth(value, fontSize);
+        return width >= strWidth;
+    }
+
+    /**
+     * 获取adobe中设置的字体大小
+     *
+     * @param formField
+     * @return
+     */
+    private static float getFontSize(PdfFormField formField) {
+        String defaultAppearance = formField.getDefaultAppearance().toString();
+        String[] daTable = defaultAppearance.split(" ");
+        return Float.parseFloat(daTable[PdfFormField.DA_SIZE]);
+
+    }
 
     public String genSinglePdf(Map<String, Object> map, String certPrefix) throws IOException {
         PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtil.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
@@ -233,38 +266,5 @@ public class PdfUtil {
         });
         pdf.close();
         return pdfUrl + newfile;
-    }
-
-    /**
-     * 1、获取文本框的宽度   注意要减去左右的padding值   值为：PdfFormField.X_OFFSET 2、获取字符串宽度注意字体   需使用中文字体
-     *
-     * @param pdfFont   字体
-     * @param formField 文本域
-     * @param value     文本值
-     * @return textWidth >= valueWidth return true else false
-     */
-    public static boolean compareWidth(PdfFont pdfFont, PdfFormField formField, String value) {
-        //获取当前文本字体大小
-        float fontSize = getFontSize(formField);
-        PdfArray position = formField.getWidgets().get(0).getRectangle();
-        float width = (float) (position.getAsNumber(2).getValue() - position.getAsNumber(0).getValue())
-                - PdfFormField.X_OFFSET * 2;
-
-        //获取当前文本值的宽度
-        float strWidth = pdfFont.getWidth(value, fontSize);
-        return width >= strWidth;
-    }
-
-    /**
-     * 获取adobe中设置的字体大小
-     *
-     * @param formField
-     * @return
-     */
-    private static float getFontSize(PdfFormField formField) {
-        String defaultAppearance = formField.getDefaultAppearance().toString();
-        String[] daTable = defaultAppearance.split(" ");
-        return Float.parseFloat(daTable[PdfFormField.DA_SIZE]);
-
     }
 }

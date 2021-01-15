@@ -5,17 +5,17 @@ public enum DbType {
     DB_ZBS("zbs"),
     DB_OA("OA");
 
+    private String name;
+
+    DbType(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
-        this.name = name;
-    }
-
-    private String name;
-
-    DbType(String name) {
         this.name = name;
     }
 

@@ -17,9 +17,9 @@ import java.util.UUID;
 @RequestMapping(value = "/internal/")
 public class InternalController {
 
+    private static final String PDF_PATH = "d:/pdfdist";
     @Resource
     private TgZbsService tgZbsService;
-    private static final String PDF_PATH = "d:/pdfdist";
 
     @RequestMapping("/round")
     public String steelRound() {

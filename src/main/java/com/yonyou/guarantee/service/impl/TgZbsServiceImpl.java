@@ -24,11 +24,15 @@ import java.util.Set;
 
 @Service
 public class TgZbsServiceImpl implements TgZbsService {
+    private final static Logger logger = LoggerFactory.getLogger(TgZbsServiceImpl.class);
     @Resource
     private ZbsDAO tgBaseDAO;
     @Resource
     private PdfUtil pdfUtil;
-    private final static Logger logger = LoggerFactory.getLogger(TgZbsServiceImpl.class);
+
+    public static void main(String[] args) {
+        System.out.println(new DecimalFormat("#.#######").format(0000.00));
+    }
 
     @Override
     public List<Map<String, Object>> getCustomerList(String custName, int currPage, int pageSize) {
@@ -778,10 +782,5 @@ public class TgZbsServiceImpl implements TgZbsService {
             return 0;
         }
         return (Integer) map.get("ID");
-    }
-
-
-    public static void main(String[] args) {
-        System.out.println(new DecimalFormat("#.#######").format(0000.00));
     }
 }

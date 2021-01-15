@@ -11,22 +11,22 @@ public class SettingsUtil {
 
     private static String jwtSecret;
 
+    public static int getJwtExpire() {
+        return jwtExpire;
+    }
+
     @Value("${jwt.expire}")
     public void setJwtExpire(int val) {
         jwtExpire = val;
     }
 
+    public static String getJwtSecret() {
+        return jwtSecret;
+    }
+
     @Value("${jwt.secret}")
     public void setJwtSecret(String val) {
         jwtSecret = val;
-    }
-
-    public static int getJwtExpire() {
-        return jwtExpire;
-    }
-
-    public static String getJwtSecret() {
-        return jwtSecret;
     }
 
 }

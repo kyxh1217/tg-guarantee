@@ -8,6 +8,19 @@ public class PageRespVO {
     private int total;
     private List<Map<String, Object>> list;
 
+    private PageRespVO(Builder builder) {
+        this.list = builder.list;
+        this.total = builder.total;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public List<Map<String, Object>> getList() {
+        return list;
+    }
+
     public static class Builder {
         private int total;
         private List<Map<String, Object>> list;
@@ -25,19 +38,6 @@ public class PageRespVO {
         public PageRespVO create() {
             return new PageRespVO(this);
         }
-    }
-
-    private PageRespVO(Builder builder) {
-        this.list = builder.list;
-        this.total = builder.total;
-    }
-
-    public int getTotal() {
-        return total;
-    }
-
-    public List<Map<String, Object>> getList() {
-        return list;
     }
 
 }
