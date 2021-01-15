@@ -1,24 +1,4 @@
-server:
-  port: 80
-  servlet:
-    session:
-      timeout: 60M
-logging:
-  config: classpath:config/logback-spring.xml
-  file:
-    path: /logs/wechat
-  level:
-    org:
-      springframework:
-        web: debug
 spring:
-  thymeleaf:
-    cache: false
-    prefix: classpath:/templates/
-    suffix: .html
-    mode: HTML
-    servlet:
-      content-type: text/html
   datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     url: jdbc:sqlserver://127.0.0.1:1433;database=Certification;sendStringParametersAsUnicode=true;responseBuffering=adaptive
@@ -29,15 +9,3 @@ spring:
     url: jdbc:sqlserver://112.33.100.180:1433;database=ecology_tg;sendStringParametersAsUnicode=true;responseBuffering=adaptive
     username: sa
     password: Tiangong@2020
-  http:
-    encoding:
-      charset: utf-8
-      enabled: true
-      force: true
-  profiles:
-    active: dev
-#  mvc:
-#    static-path-pattern: /static/**,/MP_verify_divyjSQEVfhy6G8X.txt
-#  resources:
-
-#    static-locations: classpath:/static

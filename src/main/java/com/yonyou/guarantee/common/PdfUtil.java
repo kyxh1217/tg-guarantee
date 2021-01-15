@@ -1,4 +1,4 @@
-package com.yonyou.guarantee.pdf;
+package com.yonyou.guarantee.common;
 
 import com.itextpdf.barcodes.BarcodeQRCode;
 import com.itextpdf.barcodes.qrcode.EncodeHintType;
@@ -33,7 +33,7 @@ import java.util.Objects;
 
 @Component
 @PropertySource(value = "classpath:config/setting.properties")
-public class PdfUtils {
+public class PdfUtil {
     @Value("${tg.pdf.path}")
     private String pdfPath;
     @Value("${tg.pdf.url}")
@@ -43,7 +43,7 @@ public class PdfUtils {
     private final static String[] ADDITIONAL_KEYS = new String[]{"Co", "Al", "Pb", "Sn", "Ti", "B", "Nb"};
 
     public String genSinglePdf(Map<String, Object> map, String certPrefix) throws IOException {
-        PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtils.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
+        PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtil.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
 
         //String pdfName = System.currentTimeMillis() + ".pdf";
         String pdfName = certPrefix + map.get("cCertificateNO") + ".pdf";
@@ -55,7 +55,7 @@ public class PdfUtils {
         //1、创建pdf文件
         PdfDocument pdf = new PdfDocument(pdfReader, pdfWriter);
         //2、创建中文字体
-        PdfFont f2 = PdfFontFactory.createFont(PdfUtils.class.getResource("/font").getPath() + "/SimSun.ttf", PdfEncodings.IDENTITY_H, true);
+        PdfFont f2 = PdfFontFactory.createFont(PdfUtil.class.getResource("/font").getPath() + "/SimSun.ttf", PdfEncodings.IDENTITY_H, true);
         pdf.addFont(f2);
 
         //3、获取pdf模板中的域值信息
@@ -137,7 +137,7 @@ public class PdfUtils {
     }
 
     private String doMultiPdf(Map<String, Object> head, Map<String, Object> ref, List<Map<String, Object>> batchList, String certPrefix) throws IOException {
-        PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtils.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
+        PdfReader pdfReader = new PdfReader(Objects.requireNonNull(PdfUtil.class.getClassLoader().getResourceAsStream("pdf/" + certPrefix + ".pdf")));
         String pdfName = System.currentTimeMillis() + ".pdf";
         PdfWriter pdfWriter = new PdfWriter(new FileOutputStream(pdfPath + "/" + pdfName));
         //1、创建pdf文件
@@ -145,7 +145,7 @@ public class PdfUtils {
         //2、创建中文字体
         //PdfFont f2 = null;
         // f2 = PdfFontFactory.createFont("STSong-Light", "UniGB-UCS2-H", true);
-        PdfFont f2 = PdfFontFactory.createFont(PdfUtils.class.getResource("/font").getPath() + "/SimSun.ttf", PdfEncodings.IDENTITY_H, true);
+        PdfFont f2 = PdfFontFactory.createFont(PdfUtil.class.getResource("/font").getPath() + "/SimSun.ttf", PdfEncodings.IDENTITY_H, true);
         // PdfFontFactory.createFont("ADOBESONGSTD-LIGHT.OTF", PdfEncodings.IDENTITY_H,true);
         pdf.addFont(f2);
 

@@ -2,16 +2,16 @@ package com.yonyou.guarantee.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.yonyou.guarantee.common.PdfUtil;
 import com.yonyou.guarantee.constants.DbType;
 import com.yonyou.guarantee.dao.ZbsDAO;
-import com.yonyou.guarantee.pdf.PdfUtils;
 import com.yonyou.guarantee.service.TgZbsService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class TgZbsServiceImpl implements TgZbsService {
     @Resource
     private ZbsDAO tgBaseDAO;
     @Resource
-    private PdfUtils pdfUtils;
+    private PdfUtil pdfUtil;
     private final static Logger logger = LoggerFactory.getLogger(TgZbsServiceImpl.class);
 
     @Override
@@ -70,29 +70,30 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     public List<Map<String, Object>> getFurnaceList(String searchText, int currPage, int pageSize) {
-        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID,cMFNo,cStellGrade FROM SteelTem WHERE iType='0' ";
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY t1.cMFNo,t1.cStellGrade) n,t1.cMFNo,t1.cStellGrade " +
+                " FROM (SELECT cMFNo, cStellGrade FROM SteelTem WHERE iType = '0' UNION SELECT cMFNo, cStellGrade FROM NccSteelTem WHERE iType = '0') t1 where 1=1 ";
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isEmpty(searchText)) {
-            innerSQL = innerSQL + " AND (cMFNo like ? or cStellGrade like ?)";
+            innerSQL = innerSQL + " AND (t1.cMFNo like ? or t1.cStellGrade like ?)";
             params.add("%" + searchText + "%");
             params.add("%" + searchText + "%");
         }
-        String sql = "SELECT t1.ID,t1.cMFNo,t1.cStellGrade " +
-                " FROM SteelTem t1,(" + innerSQL + ") t2 " +
-                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID";
+        String sql = "SELECT t2.n,t2.cStellGrade,t2.cMFNo  FROM (" + innerSQL + ") t2 WHERE t2.n > ? ORDER BY t2.n DESC";
         params.add((currPage - 1) * pageSize);
         return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
     }
 
     @Override
     public Integer getFurnaceCount(String searchText) {
-        String sql = "SELECT count(1) count FROM SteelTem WHERE iType='0'";
+        String innerSQL = "SELECT t1.cMFNo,t1.cStellGrade " +
+                " FROM (SELECT cMFNo, cStellGrade FROM SteelTem WHERE iType = '0' UNION SELECT cMFNo, cStellGrade FROM NccSteelTem WHERE iType = '0') t1 where 1=1";
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isEmpty(searchText)) {
-            sql = sql + " AND (cMFNo like ? or cStellGrade like ?)";
+            innerSQL = innerSQL + " AND (t1.cMFNo like ? or t1.cStellGrade like ?)";
             params.add("%" + searchText + "%");
             params.add("%" + searchText + "%");
         }
+        String sql = "SELECT count(1) count FROM (" + innerSQL + ") t2";
         Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_ZBS);
         if (map == null) {
             return 0;
@@ -323,29 +324,52 @@ public class TgZbsServiceImpl implements TgZbsService {
 
     @Override
     public List<Map<String, Object>> getBatchList(String searchText, String steelGrade, int currPage, int pageSize) {
-        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY ID DESC) n,ID,cMFNo,cStellGrade FROM SteelTem WHERE iType='0' and cStellGrade=?";
+        String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY t3.cStellGrade,t3.cHEATNO) n, t3.cStellGrade,t3.cHEATNO from (" +
+                " SELECT t1.cStellGrade,t2.cHEATNO FROM MILLTest t1,MILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>'' " +
+                " UNION " +
+                " SELECT t1.cStellGrade,t2.cHEATNO FROM NccMILLTest t1,NccMILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>''" +
+                ") as t3 where 1=1 ";
         List<Object> params = new ArrayList<>();
-        params.add(steelGrade);
+        if (!StringUtils.isEmpty(steelGrade)) {
+            innerSQL += " AND t3.cStellGrade=? ";
+            params.add(steelGrade);
+        }
         if (!StringUtils.isEmpty(searchText)) {
-            innerSQL = innerSQL + " AND cMFNo like ?";
+            if (!StringUtils.isEmpty(steelGrade)) {
+                innerSQL = innerSQL + " AND t3.cHEATNO like ? ";
+            } else {
+                innerSQL = innerSQL + " AND (t3.cHEATNO like ? or t3.cStellGrade like ?)";
+                params.add("%" + searchText + "%");
+            }
             params.add("%" + searchText + "%");
         }
-        String sql = "SELECT t1.ID,t1.cMFNo,t1.cStellGrade " +
-                " FROM SteelTem t1,(" + innerSQL + ") t2 " +
-                " WHERE t2.n > ? and t1.ID=t2.ID ORDER BY t1.ID DESC";
+        String sql = "SELECT t4.n,t4.cStellGrade,t4.cHEATNO  FROM (" + innerSQL + ") t4 WHERE t4.n > ? ORDER BY t4.n DESC";
         params.add((currPage - 1) * pageSize);
         return tgBaseDAO.executeQueryList(sql, params.toArray(), DbType.DB_ZBS);
     }
 
     @Override
     public Integer getBatchListCount(String searchText, String steelGrade) {
-        String sql = "SELECT count(1) count FROM SteelTem WHERE iType='0' and cStellGrade=?";
+        String innerSQL = "SELECT t3.cStellGrade,t3.cHEATNO from (" +
+                " SELECT t1.cStellGrade,t2.cHEATNO FROM MILLTest t1,MILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>'' " +
+                " UNION " +
+                " SELECT t1.cStellGrade,t2.cHEATNO FROM NccMILLTest t1,NccMILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>''" +
+                ") as t3 where 1=1 ";
         List<Object> params = new ArrayList<>();
-        params.add(steelGrade);
+        if (!StringUtils.isEmpty(steelGrade)) {
+            innerSQL += " AND t3.cStellGrade=? ";
+            params.add(steelGrade);
+        }
         if (!StringUtils.isEmpty(searchText)) {
-            sql = sql + " AND cMFNo like ?";
+            if (!StringUtils.isEmpty(steelGrade)) {
+                innerSQL = innerSQL + " AND t3.cHEATNO like ? ";
+            } else {
+                innerSQL = innerSQL + " AND (t3.cHEATNO like ? or t3.cStellGrade like ?)";
+                params.add("%" + searchText + "%");
+            }
             params.add("%" + searchText + "%");
         }
+        String sql = "SELECT count(1) count FROM (" + innerSQL + ") t4";
         Map<String, Object> map = tgBaseDAO.executeQueryMap(sql, params.toArray(), DbType.DB_ZBS);
         if (map == null) {
             return 0;
@@ -446,19 +470,44 @@ public class TgZbsServiceImpl implements TgZbsService {
     @Override
     public Map<String, Object> getBathHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
         Map<String, Object> retMap = new HashMap<>();
-        Map<String, Object> dataMap = tgBaseDAO.executeQueryMap("select top 1 t2.millId,t2.cCertificateNo,t2.cHEATNO," +
+        String querySql = "select top 1 t2.cHEATNO," +
                 " t2.cSIZES,t2.cPCS,t2.dWeight,t2.cFields1,t2.cFields2,t2.cFields3,t2.cFields4,t2.cFields5,t2.cFields6," +
-                " t2.cFields7,t2.cFields8,t2.cFields9,t2.cFields10,t2.cFields11,t2.cANNEALLING,t2.cHardness,t2.A_T,t2.A_H," +
-                " t2.B_H,t2.B_T,t2.C_H,t2.C_T,t2.D_H,t2.C_T,t2.D_H,t2.D_T,t2.cPorosity,t2.cSegregation,t2.cDistribution," +
-                " t2.cSize,t2.cMICROSTRUCTURE,t2.cMICROHOMOGENITY,t2.iSteelType from NccMILLTest t1,NccMILLTestDetail t2 " +
-                " where t1.ID=t2.millId and t1.cCustomer=? and t1.iSteelType=?" +
-                " and t1.cStellGrade=? and t2.cHEATNO=? ORDER BY t1.ID desc", new Object[]{cCusName, iSteelType, cStellGrade, cMFNo}, DbType.DB_ZBS);
+                " t2.cFields7,t2.cFields8,t2.cFields9,t2.cFields10,t2.cFields11,rtrim(t2.cANNEALLING) cANNEALLING," +
+                " rtrim(t2.cHardness) cHardness,rtrim(t2.A_T) A_T,rtrim(t2.A_H) A_H,rtrim(t2.B_H) B_H,rtrim(t2.B_T) B_T," +
+                " rtrim(t2.C_H) C_H,rtrim(t2.C_T) C_T,rtrim(t2.D_H) D_H,rtrim(t2.C_T) C_T,rtrim(t2.D_H) D_H," +
+                " rtrim(t2.D_T) D_T,rtrim(t2.cPorosity) cPorosity,rtrim(t2.cSegregation) cSegregation," +
+                " rtrim(t2.cDistribution) cDistribution,rtrim( t2.cSize) cSize,rtrim(t2.cMICROSTRUCTURE) cMICROSTRUCTURE," +
+                " rtrim(t2.cMICROHOMOGENITY) cMICROHOMOGENITY from ";
+        String whereSQL = "";
+        List<Object> params = new ArrayList<>();
+        params.add(iSteelType);
+        if (!StringUtils.isEmpty(cCusName)) {
+            whereSQL += " and t1.cCustomer=? ";
+            params.add(cCusName);
+        }
+        if (!StringUtils.isEmpty(cStellGrade)) {
+            whereSQL += " and t1.cStellGrade=? ";
+            params.add(cStellGrade);
+        }
+        if (!StringUtils.isEmpty(cMFNo)) {
+            whereSQL += " and t2.cHEATNO=? ";
+            params.add(cMFNo);
+        }
+        whereSQL += " ORDER BY t1.ID desc";
+        Map<String, Object> dataMap = tgBaseDAO.executeQueryMap(querySql + " NccMILLTest t1,NccMILLTestDetail t2  where t1.ID=t2.millId and t1.iSteelType=? " + whereSQL, params.toArray(), DbType.DB_ZBS);
+        if (dataMap == null) {
+            dataMap = tgBaseDAO.executeQueryMap(querySql + " MILLTest t1,MILLTestDetail t2 where t1.cCertificateNo=t2.cCertificateNo and t1.iSteelType=? " + whereSQL, params.toArray(), DbType.DB_ZBS);
+        }
         if (dataMap == null) {
             List<Map<String, Object>> nurbsList = tgBaseDAO.executeQueryList("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from" +
                     " SteelTemNurbs t where t.cCertificateNO=?", new Object[]{cMFNo}, DbType.DB_ZBS);
-            retMap.put("nurbsList", nurbsList);
+            if (!CollectionUtils.isEmpty(nurbsList)) {
+                retMap.put("nurbsList", nurbsList);
+            }
         }
-        retMap.put("dataMap", dataMap);
+        if (dataMap != null) {
+            retMap.put("dataMap", dataMap);
+        }
         return retMap;
     }
 
@@ -472,8 +521,16 @@ public class TgZbsServiceImpl implements TgZbsService {
             nurbsList.forEach(item -> tem.put((String) item.get("cElem"), item.get("dValues")));
         }
         String iSteelType = String.valueOf(tem.get("iSteelType"));
-        tem.put("dPiece", tem.get("dPiece"));
-        tem.put("dWeight",  tem.get("dWeight"));
+        String dPiece = (String) tem.get("dPiece");
+        if (StringUtils.isEmpty(dPiece) || Double.parseDouble(dPiece) <= 0) {
+            dPiece = "";
+        }
+        String dWeight = (String) tem.get("dWeight");
+        if (StringUtils.isEmpty(dWeight) || Double.parseDouble(dWeight) <= 0) {
+            dWeight = "";
+        }
+        tem.put("dPiece", dPiece);
+        tem.put("dWeight", dWeight);
         String certPrefix;
         switch (iSteelType) {
             case "1":
@@ -488,7 +545,7 @@ public class TgZbsServiceImpl implements TgZbsService {
             default:
                 certPrefix = "";
         }
-        return pdfUtils.genSinglePdf(tem, certPrefix);
+        return pdfUtil.genSinglePdf(tem, certPrefix);
     }
 
     private void saveCustomer(String cCusName) {
@@ -524,7 +581,7 @@ public class TgZbsServiceImpl implements TgZbsService {
         Map<String, Object> head = (Map<String, Object>) map.get("head");
         Map<String, Object> ref = (Map<String, Object>) map.get("ref");
         List<Map<String, Object>> batchList = (List<Map<String, Object>>) map.get("batchList");
-        return pdfUtils.genMultiPdf(head, ref, batchList);
+        return pdfUtil.genMultiPdf(head, ref, batchList);
     }
 
     @Override

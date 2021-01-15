@@ -3,13 +3,16 @@ package com.yonyou.guarantee.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.yonyou.guarantee.annotation.PassToken;
 import com.yonyou.guarantee.common.JWTTokenUtil;
+import com.yonyou.guarantee.common.PoiUtil;
 import com.yonyou.guarantee.service.TgZbsService;
 import com.yonyou.guarantee.vo.PageRespVO;
 import com.yonyou.guarantee.vo.RestResultVO;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -171,4 +174,12 @@ public class TgZbsRestController {
     public Object genMultiPdf(String id) throws IOException {
         return RestResultVO.success(tgZbsService.genMultiPdf(id));
     }
+
+    @RequestMapping(value = "/batch/import", method = RequestMethod.POST)
+    public Object importBatch(@RequestParam(name = "file1") MultipartFile file) throws Exception {
+        PoiUtil.read(file);
+        return RestResultVO.success("haha");
+    }
+
+
 }
