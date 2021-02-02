@@ -47,7 +47,6 @@ public class PoiUtil {
             }
             return list;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new Exception(e.getMessage());
         }
     }

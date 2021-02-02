@@ -628,14 +628,11 @@ public class TgZbsServiceImpl implements TgZbsService {
         List<String> keyList = new ArrayList<>();
         List<Object> valueList = new ArrayList<>();
         List<String> holderList = new ArrayList<>();
-        String cCertificateNO = this.getNextTemNum();
         for (String key : keySet) {
             if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("dDate")) {
                 continue;
             }
-            if (key.equalsIgnoreCase("cCertificateNo")) {
-                valueList.add(cCertificateNO);
-            } else if (key.equalsIgnoreCase("cOperator")) {
+            if (key.equalsIgnoreCase("cOperator")) {
                 valueList.add(userName);
             } else {
                 valueList.add(head.get(key));
