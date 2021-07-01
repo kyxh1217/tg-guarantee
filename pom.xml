@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.4.1</version>
+        <version>2.5.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.yonyou.tg</groupId>
@@ -16,11 +16,11 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <itext.version>7.1.10</itext.version>
-        <html2pdf.version>2.1.7</html2pdf.version>
+        <itext7.version>7.1.15</itext7.version>
         <jwt.version>0.9.1</jwt.version>
-        <fastjson.version>1.2.74</fastjson.version>
-        <poi.version>4.1.2</poi.version>
+        <fastjson.version>1.2.75</fastjson.version>
+        <poi.version>5.0.0</poi.version>
+        <html2pdf.version>3.0.4</html2pdf.version>
     </properties>
 
     <dependencies>
@@ -63,17 +63,7 @@
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>itext7-core</artifactId>
-            <version>${itext.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>html2pdf</artifactId>
-            <version>${html2pdf.version}</version>
-        </dependency>
+        <!--poi-->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
@@ -88,6 +78,32 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
             <version>${jwt.version}</version>
+        </dependency>
+        <!--itext-->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext7-core</artifactId>
+            <version>${itext7.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>${itext7.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>html2pdf</artifactId>
+            <version>${html2pdf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>font-asian</artifactId>
+            <version>${itext7.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
         </dependency>
     </dependencies>
     <build>

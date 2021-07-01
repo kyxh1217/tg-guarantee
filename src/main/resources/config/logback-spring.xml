@@ -170,7 +170,7 @@
 
     <!--开发环境:打印控制台-->
     <springProfile name="dev">
-        <logger name="com.yonyou.guarantee " level="debug"/>
+        <logger name="com.yonyou.zbs " level="debug"/>
     </springProfile>
 
     <root level="info">

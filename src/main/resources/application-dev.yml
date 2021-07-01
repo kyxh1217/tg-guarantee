@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://127.0.0.1:1433;database=Certification;sendStringParametersAsUnicode=true;responseBuffering=adaptive
+    url: jdbc:sqlserver://114.228.77.104:3341;database=Certification;sendStringParametersAsUnicode=true;responseBuffering=adaptive
     username: sa
     password: 123qwe
   second-datasource:

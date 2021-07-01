@@ -1,0 +1,46 @@
+/*主体内容*/
+.main-container {
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.main {
+    padding: 0 10px 0 15px;
+    margin-bottom: 60px;
+}
+
+.invalid-outline {
+    outline: 1px solid #ff180b !important;
+    outline-offset: -2px;
+}
+
+.invalid-border {
+    border-color: #ff180b !important;
+}
+
+.no-select {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.layui-table tbody tr:hover, .layui-table-hover {
+    background-color: transparent !important;
+}
+
+.layui-table-page {
+    text-align: right;
+}
+
+.btn {
+    cursor: pointer;
+}
+
+.layui-table thead tr {
+    color: #696969 !important;
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
