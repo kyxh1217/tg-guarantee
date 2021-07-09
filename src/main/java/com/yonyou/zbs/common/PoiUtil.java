@@ -22,13 +22,14 @@ public class PoiUtil {
     private final static DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
     private final static DecimalFormat df = new DecimalFormat("0.0000");
 
-    public static List<Map<String, Object>> read(MultipartFile file) throws Exception {
+    public static List<Map<String, String>> read(MultipartFile file) throws Exception {
         try {
-            if (file == null) {
-                return null;
-            }
+
             //最终返回数据
-            List<Map<String, Object>> list = new ArrayList<>();
+            List<Map<String, String>> list = new ArrayList<>();
+            if (file == null) {
+                return list;
+            }
             InputStream is = file.getInputStream();
             String name = Objects.requireNonNull(file.getOriginalFilename()).toLowerCase();
             Workbook workbook = WorkbookFactory.create(is);
@@ -37,10 +38,13 @@ public class PoiUtil {
             //获得数据的总行数
             int totalRowNum = sheet.getLastRowNum();
             //获得总列数
-            int cellCounts = sheet.getRow(0).getPhysicalNumberOfCells();
             for (int i = 0; i <= totalRowNum; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    continue;
+                }
                 //获得第i行对象
-                Map<String, Object> map = readRow(sheet.getRow(i), cellCounts);
+                Map<String, String> map = readRow(row);
                 if (map != null) {
                     list.add(map);
                 }
@@ -51,15 +55,15 @@ public class PoiUtil {
         }
     }
 
-    private static Map<String, Object> readRow(Row row, int cellCount) {
-        Map<String, Object> map = new HashMap<>();
+    private static Map<String, String> readRow(Row row) {
+        Map<String, String> map = new HashMap<>();
         //获得第i行对象
         //如果一行里的所有单元格都为空则不放进list里面
         Cell cell;
-        for (int i = 0; i < cellCount; i++) {
+        for (int i = 0; i < row.getPhysicalNumberOfCells(); i++) {
             cell = row.getCell(i);
             if (cell != null) {
-                map.put("filed" + i, getXCellVal(cell));
+                map.put("field" + i, getXCellVal(cell));
             }
         }//for
         if (map.keySet().isEmpty()) {
@@ -83,7 +87,7 @@ public class PoiUtil {
                 } else {
                     val = df.format(cell.getNumericCellValue()); //数字型
                     // 去掉多余的0，如最后一位是.则去掉
-                    //val = val.replaceAll("0+?$", "").replaceAll("[.]$", "");
+                    val = val.replaceAll("0+?$", "").replaceAll("[.]$", "");
                 }
                 break;
             case STRING: //文本类型

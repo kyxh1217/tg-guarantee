@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 import java.util.Date;
 
 
-public class AuthenticationInterceptor implements HandlerInterceptor {
+public class AuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object object) {
 

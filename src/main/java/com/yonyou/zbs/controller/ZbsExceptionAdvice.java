@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @ControllerAdvice
-public class TgZbsExceptionAdvice {
+public class ZbsExceptionAdvice {
 
     @ExceptionHandler(value = Exception.class)
     @ResponseBody

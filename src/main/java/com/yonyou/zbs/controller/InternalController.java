@@ -1,6 +1,6 @@
 package com.yonyou.zbs.controller;
 
-import com.yonyou.zbs.service.TgZbsService;
+import com.yonyou.zbs.service.SingleBatchService;
 import com.yonyou.zbs.util.Html2PdfUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +19,7 @@ public class InternalController {
 
     private static final String PDF_PATH = "d:/pdfdist";
     @Resource
-    private TgZbsService tgZbsService;
+    private SingleBatchService tgZbsService;
 
     @RequestMapping("/round")
     public String steelRound() {

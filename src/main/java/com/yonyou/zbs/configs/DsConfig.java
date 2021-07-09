@@ -16,7 +16,7 @@ import javax.sql.DataSource;
  * Spring Boot Application using Spring Data Jdbc.
  */
 @Configuration
-public class DataSourceConfiguration {
+public class DsConfig {
 
     @Bean("zbsDataSourceProperties")
     @Primary

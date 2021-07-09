@@ -98,6 +98,18 @@
                             <div style="float: left">SIZES(mm):</div>
                             <div class="line-l1">${batch.cSIZES!''}</div>
                         </div>
+                        <#if batch.Condition?? && batch.Condition!=''>
+                            <div style="float: left;width: 33%">
+                                <div style="float: left">Condition:</div>
+                                <div class="line-l1">${batch.Condition!''}</div>
+                            </div>
+                        </#if>
+                        <#if batch.cGrainSize?? && batch.cGrainSize!=''>
+                            <div style="float: left;width: 33%">
+                                <div style="float: left">Grain size:</div>
+                                <div class="line-l1">${batch.cGrainSize!''}</div>
+                            </div>
+                        </#if>
                         <div style="float: left;width: 33%">
                             <div style="float: left"> NO. OF PCS:</div>
                             <div class="line-l1">${batch.cPCS!''}</div>

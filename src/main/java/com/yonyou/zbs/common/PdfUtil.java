@@ -178,7 +178,7 @@ public class PdfUtil {
         //2、创建中文字体
         //PdfFont f2 = null;
         // f2 = PdfFontFactory.createFont("STSong-Light", "UniGB-UCS2-H", true);
-        PdfFont f2 = PdfFontFactory.createFont(PdfUtil.class.getResource("/font").getPath() + "/SimSun.ttf", PdfEncodings.IDENTITY_H, true);
+        PdfFont f2 = PdfFontFactory.createFont(PdfUtil.class.getResource("/font").getPath() + "/SimSun.ttf", PdfEncodings.IDENTITY_H);
         // PdfFontFactory.createFont("ADOBESONGSTD-LIGHT.OTF", PdfEncodings.IDENTITY_H,true);
         pdf.addFont(f2);
 
