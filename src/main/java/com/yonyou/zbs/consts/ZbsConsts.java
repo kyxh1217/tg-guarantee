@@ -1,6 +1,12 @@
 package com.yonyou.zbs.consts;
 
 public interface ZbsConsts {
+    String STEEL_TYPE_1 = "1";
+    String STEEL_TYPE_2 = "2";
+    String STEEL_TYPE_3 = "3";
+    String STEEL_TYPE_4 = "4";
+    String ZBS_TYPE_M = "M";
+    String ZBS_TYPE_S = "S";
     String[] M_HEAD_COLUMNS = new String[]{
             "ID",
             "cNO",
@@ -126,6 +132,53 @@ public interface ZbsConsts {
             "Ti",
             "B",
             "Nb"
+    };
+    String[] M_REF_COLUMNS_ROUND = new String[]{
+            "C",
+            "Si",
+            "Mn",
+            "P",
+            "S",
+            "W",
+            "Mo",
+            "Cr",
+            "V",
+            "Cu",
+            "Ni",
+            "Co",
+            "Al",
+            "Pb",
+            "Sn",
+            "Ti",
+            "B",
+            "Nb",
+            "A_T",
+            "A_H",
+            "B_T",
+            "B_H",
+            "C_T",
+            "C_H",
+            "D_T",
+            "D_H",
+            "cHardness",
+            "cGrainSize"
+    };
+    String[] M_ELEMENTS_ROUND = new String[]{
+            "C",
+            "Si",
+            "Mn",
+            "P",
+            "S",
+            "Cr",
+            "Mo",
+            "V",
+            "W",
+            "Co",
+            "Cu",
+            "Ni",
+            "H2",
+            "O2",
+            "N2"
     };
     String[] M_NONMETALLIC = new String[]{
             "A_H",

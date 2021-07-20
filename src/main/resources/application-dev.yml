@@ -1,11 +1,29 @@
 spring:
   datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://114.228.77.104:3341;database=Certification;sendStringParametersAsUnicode=true;responseBuffering=adaptive
+    url: jdbc:sqlserver://114.227.154.245:3341;database=Certification;sendStringParametersAsUnicode=true;responseBuffering=adaptive
     username: sa
     password: 123qwe
+    hikari:
+      connection-timeout: 60000
+      validation-timeout: 3000
+      idle-timeout: 60000
+      login-timeout: 5
+      max-lifetime: 60000
+      maximum-pool-size: 10
+      minimum-idle: 10
+      read-only: false
   second-datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     url: jdbc:sqlserver://112.33.100.180:1433;database=ecology_tg;sendStringParametersAsUnicode=true;responseBuffering=adaptive
     username: sa
     password: Tiangong@2020
+    hikari:
+      connection-timeout: 60000
+      validation-timeout: 3000
+      idle-timeout: 60000
+      login-timeout: 5
+      max-lifetime: 60000
+      maximum-pool-size: 10
+      minimum-idle: 10
+      read-only: false

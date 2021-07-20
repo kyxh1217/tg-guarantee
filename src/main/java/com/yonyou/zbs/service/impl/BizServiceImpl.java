@@ -1,5 +1,6 @@
 package com.yonyou.zbs.service.impl;
 
+import com.yonyou.zbs.consts.ZbsConsts;
 import com.yonyou.zbs.dao.OaDAO;
 import com.yonyou.zbs.dao.ZbsDAO;
 import com.yonyou.zbs.service.BizService;
@@ -96,7 +97,7 @@ public class BizServiceImpl implements BizService {
     @Override
     public synchronized String getNextCertNo(String certType) {
         String sql = "SELECT ISNULL(max(cCertificateNO), 0)+1 FROM ";
-        if ("M".equalsIgnoreCase(certType)) {
+        if (ZbsConsts.ZBS_TYPE_M.equalsIgnoreCase(certType)) {
             sql = sql + "NccMILLTest";
         } else {
             sql = sql + "NccSteelTem";

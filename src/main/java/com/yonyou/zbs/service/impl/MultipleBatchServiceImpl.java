@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Service
 public class MultipleBatchServiceImpl implements MultipleBatchService {
@@ -38,8 +37,8 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
     @Override
     public List<Map<String, Object>> getBatchList(String searchText, String steelGrade, int currPage, int pageSize) {
         String innerSQL = "SELECT TOP " + (currPage * pageSize) + " row_number() OVER (ORDER BY t3.cStellGrade,t3.cHEATNO) n, t3.cStellGrade,t3.cHEATNO from (" +
-                " SELECT t1.cStellGrade,t2.cHEATNO FROM MILLTest t1,MILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>'' " +
-                " UNION " +
+                //   " SELECT t1.cStellGrade,t2.cHEATNO FROM MILLTest t1,MILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>'' " +
+                //   " UNION " +
                 " SELECT t1.cStellGrade,t2.cHEATNO FROM NccMILLTest t1,NccMILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>''" +
                 ") as t3 where 1=1 ";
         List<Object> params = new ArrayList<>();
@@ -64,8 +63,8 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
     @Override
     public Integer getBatchListCount(String searchText, String steelGrade) {
         String innerSQL = "SELECT t3.cStellGrade,t3.cHEATNO from (" +
-                " SELECT t1.cStellGrade,t2.cHEATNO FROM MILLTest t1,MILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>'' " +
-                " UNION " +
+                //   " SELECT t1.cStellGrade,t2.cHEATNO FROM MILLTest t1,MILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>'' " +
+                //   " UNION " +
                 " SELECT t1.cStellGrade,t2.cHEATNO FROM NccMILLTest t1,NccMILLTestDetail t2 WHERE t1.cCertificateNo=t2.cCertificateNo AND isnull(t2.cHEATNO,'')<>''" +
                 ") as t3 where 1=1 ";
         List<Object> params = new ArrayList<>();
@@ -168,14 +167,13 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
                 "t.iSteelType,t.cNOTES1,t.cNOTES2,t.cSPECIFICATION from NccMILLTest t where t.ID=?", id);
         List<Map<String, Object>> batchList = zbsDAO.executeQueryList("SELECT t.i_id,t.millId,t.cCertificateNo," +
                 "t.cHEATNO,t.cSIZES,t.cPCS,t.dWeight,t.cFields1,t.cFields2,t.cFields3,t.cFields4,t.cFields5,t.cFields6," +
-                "t.cFields7,t.cFields8,t.cFields9,t.cFields10,t.cFields11,t.cANNEALLING,t.cHardness,t.A_T,t.A_H,t.B_H," +
+                "t.cFields7,t.cFields8,t.cFields9,t.cFields10,t.cFields11,t.cFields12,t.cFields13,t.cFields14,t.cFields15," +
+                "t.cFields16,t.cFields17,t.cFields18,t.cANNEALLING,t.cHardness,t.A_T,t.A_H,t.B_H," +
                 "t.B_T,t.C_H,t.C_T,t.D_H,t.C_T,t.D_H,t.D_T,t.cPorosity,t.cSegregation,t.cDistribution,t.cSize,t.cMICROSTRUCTURE," +
                 "t.cMICROHOMOGENITY,t.iSteelType FROM NccMILLTestDetail t where t.millId=?", id);
-        Map<String, Object> refMap = zbsDAO.executeQueryMap("SELECT TOP 1 t.ID,t.millId,t.C,t.Si,t.Mn,t.P,t.S,t.W,t.Mo," +
-                "t.Cr,t.V,t.Cu,t.Ni  FROM NccElemental t where t.millId=? order by t.ID desc", id);
         Map<String, Object> map = new HashMap<>();
         map.put("head", headMap);
-        map.put("ref", refMap);
+        map.put("ref", this.getRefMap(id));
         map.put("batchList", batchList);
         return map;
     }
@@ -185,14 +183,18 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
         Map<String, Object> retMap = new HashMap<>();
         Map<String, Object> dataMap = this.getHistoryMap(cMFNo, cStellGrade, cCusName, iSteelType);
         if (dataMap == null) {
-            List<Map<String, Object>> nurbsList = zbsDAO.executeQueryList("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from" +
-                    " SteelTemNurbs t where t.cCertificateNO=?", cMFNo);
+            List<Map<String, Object>> nurbsList = this.getNurbsList(cMFNo);
             if (!CollectionUtils.isEmpty(nurbsList)) {
                 retMap.put("nurbsList", nurbsList);
             }
         }
         retMap.put("dataMap", dataMap);
         return retMap;
+    }
+
+    private List<Map<String, Object>> getNurbsList(String cMFNo) {
+        return zbsDAO.executeQueryList("select  RTRIM(t.cElem) cElem,RTRIM(t.dValues) dValues from" +
+                " SteelTemNurbs t where t.cCertificateNO=?", cMFNo);
     }
 
     private Map<String, Object> getHistoryMap(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
@@ -283,12 +285,28 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
             }
             hisCache.put(cHeatNo, hisMap);
             Map<String, Object> resultMap = new HashMap<>();
-            if (CollectionUtils.isEmpty(hisMap)) {
-                resultMap.put("cHEATNO", batchMap.get("field0"));
-            } else {
-                for (String key : hisMap.keySet()) {
-                    resultMap.put(key, hisMap.get(key));
+            resultMap.put("cHEATNO", batchMap.get("field0"));
+            if (CollectionUtils.isEmpty(hisMap) || !hisMap.containsKey("cFields1")) {
+                if (hisMap == null) {
+                    hisMap = new HashMap<>();
                 }
+                List<Map<String, Object>> nurbsList = this.getNurbsList(cHeatNo);
+                if (!CollectionUtils.isEmpty(nurbsList)) {
+                    for (Map<String, Object> map : nurbsList) {
+                        String cElem = (String) map.get("cElem");
+                        String dValues = (String) map.get("dValues");
+                        for (int k = 0; k < ZbsConsts.M_ELEMENTS.length; k++) {
+                            if (ZbsConsts.M_ELEMENTS[k].equalsIgnoreCase(cElem)) {
+                                hisMap.put("cFields" + (k + 1), dValues);
+                                break;
+                            }
+                        }
+                    }
+
+                }
+            }
+            for (String key : hisMap.keySet()) {
+                resultMap.put(key, hisMap.get(key));
             }
             resultMap.put("cSIZES", batchMap.get("field1"));
             resultMap.put("cPCS", batchMap.get("field2"));
@@ -300,6 +318,7 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
 
     private int insertBatch(String headForm, String bodyJson, String refJson, String userName) {
         JSONObject head = JSONObject.parseObject(headForm);
+        String iSteelType = head.getString("iSteelType");
         List<String> keyList = new ArrayList<>();
         List<Object> valueList = new ArrayList<>();
         List<String> holderList = new ArrayList<>();
@@ -309,6 +328,8 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
             }
             if (key.equalsIgnoreCase("cOperator")) {
                 valueList.add(userName);
+            } else if (key.equalsIgnoreCase("cCertificateNo")) {
+                valueList.add(bizService.getNextCertNo(ZbsConsts.ZBS_TYPE_M));
             } else {
                 valueList.add(head.get(key));
             }
@@ -336,35 +357,17 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
             zbsDAO.insert("insert into NccMILLTestDetail (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
                     valueList.toArray());
         }
-        if (!StringUtils.isEmpty(refJson)) {
-            JSONObject ref = JSONObject.parseObject(refJson);
-            keyList = new ArrayList<>();
-            valueList = new ArrayList<>();
-            holderList = new ArrayList<>();
-            for (String key : ZbsConsts.M_REF_COLUMNS) {
-                if (key.equalsIgnoreCase("ID")) {
-                    continue;
-                }
-                valueList.add(ref.get(key));
-                keyList.add(key);
-                holderList.add("?");
-            }
-            valueList.add(millId);
-            keyList.add("millId");
-            holderList.add("?");
-            zbsDAO.insert("insert into NccElemental (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
-                    valueList.toArray());
-        }
+        this.insertRef(String.valueOf(millId), iSteelType, refJson);
         return 0;
     }
 
     private int updateBatch(String headForm, String bodyJson, String refJson) {
         JSONObject head = JSONObject.parseObject(headForm);
         String millId = head.getString("ID");
-        Set<String> keySet = head.keySet();
+        String iSteelType = head.getString("iSteelType");
         List<String> keyList = new ArrayList<>();
         List<Object> valueList = new ArrayList<>();
-        for (String key : keySet) {
+        for (String key : ZbsConsts.M_HEAD_COLUMNS) {
             if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("dDate") || key.equalsIgnoreCase("cCertificateNo")) {
                 continue;
             }
@@ -375,15 +378,14 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
         valueList.add(millId);
         zbsDAO.executeUpdate(updateSql, valueList.toArray());
         zbsDAO.executeUpdate("delete from NccMILLTestDetail where millId=?", millId);
-        zbsDAO.executeUpdate("delete from NccElemental where millId=?", millId);
+        zbsDAO.executeUpdate("delete from NccMILLRef where millId=?", millId);
         List<String> holderList;
         List<JSONObject> bodyArray = JSONArray.parseArray(bodyJson, JSONObject.class);
         for (JSONObject body : bodyArray) {
-            keySet = body.keySet();
             keyList = new ArrayList<>();
             valueList = new ArrayList<>();
             holderList = new ArrayList<>();
-            for (String key : keySet) {
+            for (String key : ZbsConsts.M_BODY_COLUMNS) {
                 if (key.equalsIgnoreCase("i_id")) {
                     continue;
                 }
@@ -399,26 +401,39 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
                     valueList.toArray());
         }
         if (!StringUtils.isEmpty(refJson)) {
-            JSONObject ref = JSONObject.parseObject(refJson);
-            keySet = ref.keySet();
-            keyList = new ArrayList<>();
-            valueList = new ArrayList<>();
-            holderList = new ArrayList<>();
-            for (String key : keySet) {
-                if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("millId")) {
-                    continue;
-                }
-                valueList.add(ref.get(key));
-                keyList.add(key);
-                holderList.add("?");
-            }
-            valueList.add(millId);
-            keyList.add("millId");
-            holderList.add("?");
-            zbsDAO.insert("insert into NccElemental (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
-                    valueList.toArray());
+            this.insertRef(millId, iSteelType, refJson);
         }
         return 0;
     }
 
+    private void insertRef(String millId, String iSteelType, String refJson) {
+        if (!StringUtils.isEmpty(refJson)) {
+            JSONObject ref = JSONObject.parseObject(refJson);
+            String[] refColumns = null;
+            if (ZbsConsts.STEEL_TYPE_1.equalsIgnoreCase(iSteelType)) {
+                refColumns = ZbsConsts.M_REF_COLUMNS_ROUND;
+            }
+            if (refColumns == null || refColumns.length == 0) {
+                return;
+            }
+            String refInSQL = "insert into NccMILLRef (millId,refName,refValue) values (?,?,?)";
+            for (String columnName : refColumns) {
+                if (ref.containsKey(columnName) && ref.get(columnName) != null) {
+                    zbsDAO.insert(refInSQL, millId, columnName, ref.get(columnName));
+                }
+            }
+        }
+    }
+
+    /**
+     * 查询参考值
+     */
+    private Map<String, Object> getRefMap(String millId) {
+        List<Map<String, Object>> refMapList = zbsDAO.executeQueryList("select refName,refValue from NccMILLRef where millId=? by t.ID desc", millId);
+        Map<String, Object> refMap = new HashMap<>();
+        if (!CollectionUtils.isEmpty(refMapList)) {
+            refMapList.forEach(map -> refMap.put((String) map.get("refName"), map.get("refValue")));
+        }
+        return refMap;
+    }
 }

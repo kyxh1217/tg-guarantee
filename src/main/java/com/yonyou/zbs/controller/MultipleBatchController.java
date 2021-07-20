@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/rest/zbs")
+@RequestMapping("/rest/zbs/multi")
 public class MultipleBatchController {
     @Resource
     private MultipleBatchService multipleBatchService;
 
-    @GetMapping(value = "/batch/list")
+    @GetMapping(value = "/batch_list")
     public Object getBatchList(String searchText, String steelGrade, Integer currPage, Integer pageSize) {
         currPage = null == currPage ? 1 : currPage;
         pageSize = null == pageSize ? 10 : pageSize;
@@ -32,12 +32,12 @@ public class MultipleBatchController {
         return RestResultVO.success(pageRespVO);
     }
 
-    @GetMapping(value = "/multi/id")
+    @GetMapping(value = "/id")
     public Object getMultiById(String id) {
         return RestResultVO.success(multipleBatchService.getMultiById(id));
     }
 
-    @GetMapping(value = "/multi/list")
+    @GetMapping(value = "/list")
     public Object getMultiByType(String iSteelType, String custName, String startDate, String endDate, String searchText, Integer currPage, Integer pageSize) {
         currPage = null == currPage ? 1 : currPage;
         pageSize = null == pageSize ? 10 : pageSize;
@@ -47,23 +47,23 @@ public class MultipleBatchController {
         return RestResultVO.success(pageRespVO);
     }
 
-    @PostMapping(value = "/multi/save")
+    @PostMapping(value = "/save")
     public Object batchSave(String headJson, String bodyJson, String refJson, HttpServletRequest request) {
         String userName = (String) request.getAttribute("userName");
         return RestResultVO.success(multipleBatchService.multiSave(headJson, bodyJson, refJson, userName));
     }
 
-    @GetMapping(value = "/batch/his")
+    @GetMapping(value = "/batch_history")
     public Object batchHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
         return RestResultVO.success(multipleBatchService.getBathHistory(cMFNo, cStellGrade, cCusName, iSteelType));
     }
 
-    @GetMapping(value = "/pdf/gen_m")
+    @GetMapping(value = "/gen_free")
     public Object genPdfFreemarkerM(String id) throws Exception {
         return RestResultVO.success(multipleBatchService.genPdfFreemarkerM(id));
     }
 
-    @PostMapping(value = "/batch/import")
+    @PostMapping(value = "/batch_import")
     public Object importBatch(@RequestParam(name = "file1") MultipartFile file, String cStellGrade) {
         try {
             return RestResultVO.success(multipleBatchService.batchImport(file, cStellGrade));
@@ -73,7 +73,7 @@ public class MultipleBatchController {
 
     }
 
-    @GetMapping(value = "/pdf/gen/multi")
+    @GetMapping(value = "/gen")
     public Object genMultiPdf(String id) throws IOException {
         return RestResultVO.success(multipleBatchService.genMultiPdf(id));
     }

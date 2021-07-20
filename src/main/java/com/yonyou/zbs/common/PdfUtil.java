@@ -267,4 +267,8 @@ public class PdfUtil {
         pdf.close();
         return pdfUrl + newfile;
     }
+
+    public String getPdfUrl() {
+        return pdfUrl;
+    }
 }

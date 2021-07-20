@@ -11,56 +11,63 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/rest/zbs")
+@RequestMapping("/rest/zbs/tem")
 public class SingleBatchController {
 
     @Resource
-    private SingleBatchService tgZbsService;
+    private SingleBatchService singleBatchService;
 
-    @GetMapping(value = "/tem/his")
+    @GetMapping(value = "/history")
     public Object getChemicals(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
-        return RestResultVO.success(tgZbsService.getTemHistory(cMFNo, cStellGrade, cCusName, iSteelType));
+        return RestResultVO.success(singleBatchService.getTemHistory(cMFNo, cStellGrade, cCusName, iSteelType));
     }
 
-    @GetMapping(value = "/tem/list")
+    @GetMapping(value = "/list")
     public Object getTemByType(String iSteelType, String custName, String startDate, String endDate, String searchText, Integer currPage, Integer pageSize) {
         currPage = null == currPage ? 1 : currPage;
         pageSize = null == pageSize ? 10 : pageSize;
-        List<Map<String, Object>> dataList = tgZbsService.getTemByType(iSteelType, custName, startDate, endDate, searchText, currPage, pageSize);
-        int total = tgZbsService.getTemByTypeCount(iSteelType, custName, startDate, endDate, searchText);
+        List<Map<String, Object>> dataList = singleBatchService.getTemByType(iSteelType, custName, startDate, endDate, searchText, currPage, pageSize);
+        int total = singleBatchService.getTemByTypeCount(iSteelType, custName, startDate, endDate, searchText);
         PageRespVO pageRespVO = new PageRespVO.Builder().total(total).addList(dataList).create();
         return RestResultVO.success(pageRespVO);
     }
 
-    @GetMapping(value = "/tem/id")
+    @GetMapping(value = "/id")
     public Object getTemById(String id) {
-        return RestResultVO.success(tgZbsService.getTemById(id));
+        return RestResultVO.success(singleBatchService.getTemById(id));
     }
 
-    @GetMapping(value = "/tem/del")
+    @GetMapping(value = "/del")
     public Object delTemById(String id) {
-        return RestResultVO.success(tgZbsService.delTemById(id));
+        return RestResultVO.success(singleBatchService.delTemById(id));
     }
 
-
-    @GetMapping(value = "/tem/seq")
-    public Object getNextTemNum() {
-        return RestResultVO.success(tgZbsService.getNextTemNum());
-    }
-
-    @PostMapping(value = "/tem/save")
+    @PostMapping(value = "/save")
     public Object temSave(String temJson, String nurbsJson, HttpServletRequest request) {
         String userName = (String) request.getAttribute("userName");
-        return RestResultVO.success(tgZbsService.temSave(temJson, nurbsJson, userName));
+        int id = singleBatchService.temSave(temJson, nurbsJson, userName);
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", id);
+        try {
+            map.put("pdfUrl", singleBatchService.genSinglePdf(String.valueOf(id)));
+        } catch (Exception e) {
+            return RestResultVO.error("保存错误:" + e.getMessage());
+        }
+        return RestResultVO.success(map);
     }
 
-    @GetMapping(value = "/pdf/gen/single")
+    @GetMapping(value = "/gen")
     public Object genSinglePdf(String id) throws IOException {
-        return RestResultVO.success(tgZbsService.genSinglePdf(id));
+        return RestResultVO.success(singleBatchService.genSinglePdf(id));
     }
 
+    @GetMapping(value = "/view")
+    public Object viewSingle(String id) {
+        return RestResultVO.success(singleBatchService.viewSinglePdf(id));
+    }
 }

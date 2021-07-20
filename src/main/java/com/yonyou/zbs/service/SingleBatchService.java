@@ -54,13 +54,6 @@ public interface SingleBatchService {
      */
     boolean delTemById(String id);
 
-    /**
-     * 获取质保书编号
-     *
-     * @return next tem num
-     */
-    String getNextTemNum();
-
 
     /**
      * 保存质保书
@@ -74,5 +67,6 @@ public interface SingleBatchService {
 
     String genSinglePdf(String id) throws IOException;
 
+    String viewSinglePdf(String id);
 
 }

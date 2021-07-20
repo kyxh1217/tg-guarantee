@@ -2,7 +2,9 @@ package com.yonyou.zbs.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.yonyou.zbs.common.PdfUtil;
+import com.yonyou.zbs.consts.ZbsConsts;
 import com.yonyou.zbs.dao.ZbsDAO;
+import com.yonyou.zbs.service.BizService;
 import com.yonyou.zbs.service.SingleBatchService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -25,7 +27,8 @@ public class SingleBatchServiceImpl implements SingleBatchService {
     private ZbsDAO zbsDAO;
     @Resource
     private PdfUtil pdfUtil;
-
+    @Resource
+    private BizService bizService;
 
     @Override
     public Map<String, Object> getTemHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType) {
@@ -172,8 +175,7 @@ public class SingleBatchServiceImpl implements SingleBatchService {
         }
     }
 
-    @Override
-    public String getNextTemNum() {
+    private String getNextTemNum() {
         //Map<String, Object> map = tgBaseDAO.executeQueryMap("SELECT NEXT VALUE FOR temSeq", null, DbType.DB_ZBS);
         Map<String, Object> map = zbsDAO.executeQueryMap("Declare @NewSeqVal int;Exec @NewSeqVal =  P_GetNewSeqVal_SeqT_0101001;" +
                 "select @NewSeqVal  as mySeq;");
@@ -231,6 +233,31 @@ public class SingleBatchServiceImpl implements SingleBatchService {
         return pdfUtil.genSinglePdf(tem, certPrefix);
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public String viewSinglePdf(String id) {
+        String sql = "SELECT t.ID,t.iSteelType,t.cCertificateNO FROM NccSteelTem t where t.ID=?";
+        Map<String, Object> map = zbsDAO.executeQueryMap(sql, id);
+        String iSteelType = String.valueOf(map.get("iSteelType"));
+        String cCertificateNO = (String) map.get("cCertificateNO");
+        String certPrefix;
+        switch (iSteelType) {
+            case "1":
+                certPrefix = "TGY";
+                break;
+            case "2":
+                certPrefix = "TGB";
+                break;
+            case "3":
+                certPrefix = "TGG";
+                break;
+            default:
+                certPrefix = "";
+        }
+        return pdfUtil.getPdfUrl() + "/" + certPrefix + cCertificateNO + ".pdf";
+    }
+
+
     private void saveCustomer(String cCusName) {
         try {
             Map<String, Object> map = zbsDAO.executeQueryMap("select ID FROM Customer where cCusName=?", cCusName);
@@ -257,6 +284,8 @@ public class SingleBatchServiceImpl implements SingleBatchService {
             }
             if (key.equalsIgnoreCase("cOperator")) {
                 valueList.add(userName);
+            } else if (key.equalsIgnoreCase("cCertificateNo")) {
+                valueList.add(bizService.getNextCertNo(ZbsConsts.ZBS_TYPE_M));
             } else {
                 valueList.add(tem.get(key));
             }
@@ -288,7 +317,7 @@ public class SingleBatchServiceImpl implements SingleBatchService {
             valueList.add(tem.get(key));
         }
         String updateSql = "update NccSteelTem set " + String.join("=?,", keyList) + "=? where ID=?";
-        valueList.add(tem.getString("ID"));
+        valueList.add(id);
         zbsDAO.executeUpdate(updateSql, valueList.toArray());
         zbsDAO.executeUpdate("delete from NccSteelTemNurbs where temId=?", id);
         JSONObject nurbs = JSONObject.parseObject(nurbsJson);
