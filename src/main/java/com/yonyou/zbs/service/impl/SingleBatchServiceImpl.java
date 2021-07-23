@@ -1,19 +1,26 @@
 package com.yonyou.zbs.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.yonyou.zbs.common.PdfUtil;
 import com.yonyou.zbs.consts.ZbsConsts;
 import com.yonyou.zbs.dao.ZbsDAO;
 import com.yonyou.zbs.service.BizService;
 import com.yonyou.zbs.service.SingleBatchService;
+import com.yonyou.zbs.util.SettingsUtils;
+import com.yonyou.zbs.util.SingleBatchPdfUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +32,6 @@ public class SingleBatchServiceImpl implements SingleBatchService {
     private final static Logger logger = LoggerFactory.getLogger(SingleBatchServiceImpl.class);
     @Resource
     private ZbsDAO zbsDAO;
-    @Resource
-    private PdfUtil pdfUtil;
     @Resource
     private BizService bizService;
 
@@ -230,14 +235,25 @@ public class SingleBatchServiceImpl implements SingleBatchService {
             default:
                 certPrefix = "";
         }
-        return pdfUtil.genSinglePdf(tem, certPrefix);
+        return SingleBatchPdfUtils.genSinglePdf(tem, certPrefix);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public String viewSinglePdf(String id) {
+    public String viewSinglePdf(String id) throws Exception {
+        String pdfName = this.getPdfName(id);
+        File pdfFile = new File(pdfName);
+        if (!pdfFile.exists()) {
+            this.genSinglePdf(id);
+        }
+        return SettingsUtils.getPdfUrl() + pdfName;
+    }
+
+    private String getPdfName(String id) throws Exception {
         String sql = "SELECT t.ID,t.iSteelType,t.cCertificateNO FROM NccSteelTem t where t.ID=?";
         Map<String, Object> map = zbsDAO.executeQueryMap(sql, id);
+        if (map == null) {
+            throw new Exception("质保书不存在");
+        }
         String iSteelType = String.valueOf(map.get("iSteelType"));
         String cCertificateNO = (String) map.get("cCertificateNO");
         String certPrefix;
@@ -254,7 +270,24 @@ public class SingleBatchServiceImpl implements SingleBatchService {
             default:
                 certPrefix = "";
         }
-        return pdfUtil.getPdfUrl() + "/" + certPrefix + cCertificateNO + ".pdf";
+        String pdfName = certPrefix + cCertificateNO + ".pdf";
+        File pdfFile = new File(SettingsUtils.getPdfPath() + "/" + pdfName);
+        if (!pdfFile.exists()) {
+            this.genSinglePdf(id);
+        }
+        return pdfName;
+    }
+
+    @Override
+    public ResponseEntity<byte[]> download(String id) throws Exception {
+        File file = new File(SettingsUtils.getPdfPath() + "/" + this.getPdfName(id));
+        InputStream is = new FileInputStream(file);
+        byte[] body = new byte[is.available()];
+        is.read(body);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment;filename=" + file.getName());
+        HttpStatus statusCode = HttpStatus.OK;
+        return new ResponseEntity<>(body, headers, statusCode);
     }
 
 

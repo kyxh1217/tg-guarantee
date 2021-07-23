@@ -1,5 +1,7 @@
 package com.yonyou.zbs.service;
 
+import org.springframework.http.ResponseEntity;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +69,8 @@ public interface SingleBatchService {
 
     String genSinglePdf(String id) throws IOException;
 
-    String viewSinglePdf(String id);
+    String viewSinglePdf(String id) throws Exception;
+
+    ResponseEntity<byte[]> download(String id) throws Exception;
 
 }

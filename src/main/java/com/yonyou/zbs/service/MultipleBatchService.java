@@ -50,7 +50,7 @@ public interface MultipleBatchService {
      */
     Map<String, Object> getBathHistory(String cMFNo, String cStellGrade, String cCusName, String iSteelType);
 
-    String genMultiPdf(String id) throws IOException;
+    String genMultiPdf(String id) throws Exception;
 
     /**
      * 通过freemarker生成模板，然后itext生成pdf

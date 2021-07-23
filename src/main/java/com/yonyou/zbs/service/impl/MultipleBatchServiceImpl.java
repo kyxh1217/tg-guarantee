@@ -2,13 +2,13 @@ package com.yonyou.zbs.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.yonyou.zbs.common.PdfUtil;
-import com.yonyou.zbs.common.PoiUtil;
 import com.yonyou.zbs.consts.ZbsConsts;
 import com.yonyou.zbs.dao.ZbsDAO;
 import com.yonyou.zbs.service.BizService;
 import com.yonyou.zbs.service.MultipleBatchService;
-import com.yonyou.zbs.util.PdfFile;
+import com.yonyou.zbs.util.FreemarkerPdfUtils;
+import com.yonyou.zbs.util.MultipleBatchPdfUtils;
+import com.yonyou.zbs.util.PoiExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +29,7 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
     @Resource
     private ZbsDAO zbsDAO;
     @Resource
-    private PdfUtil pdfUtil;
+    private MultipleBatchPdfUtils multipleBatchPdfUtils;
     @Resource
     private BizService bizService;
 
@@ -234,17 +233,17 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public String genMultiPdf(String id) throws IOException {
+    public String genMultiPdf(String id) throws Exception {
         Map<String, Object> map = this.getMultiById(id);
         Map<String, Object> head = (Map<String, Object>) map.get("head");
         Map<String, Object> ref = (Map<String, Object>) map.get("ref");
         List<Map<String, Object>> batchList = (List<Map<String, Object>>) map.get("batchList");
-        return pdfUtil.genMultiPdf(head, ref, batchList);
+        return multipleBatchPdfUtils.genMultiPdf(head, ref, batchList);
     }
 
     @Override
     public String genPdfFreemarkerM(String id) throws Exception {
-        PdfFile.template("zbs_m.ftl", this.getMultiById(id), "d:/pdf/m_" + id + ".pdf");
+        FreemarkerPdfUtils.template("zbs_m.ftl", this.getMultiById(id), "d:/pdf/m_" + id + ".pdf");
         return null;
     }
 
@@ -253,7 +252,7 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
         if (file == null || file.isEmpty()) {
             throw new Exception("文件不能为空");
         }
-        List<Map<String, String>> batchList = PoiUtil.read(file);
+        List<Map<String, String>> batchList = PoiExcelUtils.read(file);
         if (CollectionUtils.isEmpty(batchList) || batchList.size() <= 3) {
             throw new Exception("excel中没有数据");
         }
@@ -409,15 +408,15 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
     private void insertRef(String millId, String iSteelType, String refJson) {
         if (!StringUtils.isEmpty(refJson)) {
             JSONObject ref = JSONObject.parseObject(refJson);
-            String[] refColumns = null;
+            String[] refFields = null;
             if (ZbsConsts.STEEL_TYPE_1.equalsIgnoreCase(iSteelType)) {
-                refColumns = ZbsConsts.M_REF_COLUMNS_ROUND;
+                refFields = ZbsConsts.M1.REF_FIELDS;
             }
-            if (refColumns == null || refColumns.length == 0) {
+            if (refFields == null || refFields.length == 0) {
                 return;
             }
             String refInSQL = "insert into NccMILLRef (millId,refName,refValue) values (?,?,?)";
-            for (String columnName : refColumns) {
+            for (String columnName : refFields) {
                 if (ref.containsKey(columnName) && ref.get(columnName) != null) {
                     zbsDAO.insert(refInSQL, millId, columnName, ref.get(columnName));
                 }
@@ -429,7 +428,7 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
      * 查询参考值
      */
     private Map<String, Object> getRefMap(String millId) {
-        List<Map<String, Object>> refMapList = zbsDAO.executeQueryList("select refName,refValue from NccMILLRef where millId=? by t.ID desc", millId);
+        List<Map<String, Object>> refMapList = zbsDAO.executeQueryList("select refName,refValue from NccMILLRef where millId=? order by ID desc", millId);
         Map<String, Object> refMap = new HashMap<>();
         if (!CollectionUtils.isEmpty(refMapList)) {
             refMapList.forEach(map -> refMap.put((String) map.get("refName"), map.get("refValue")));

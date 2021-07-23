@@ -2,8 +2,8 @@ package com.yonyou.zbs.configs;
 
 import com.alibaba.fastjson.JSON;
 import com.yonyou.zbs.annotation.PassToken;
-import com.yonyou.zbs.common.JWTTokenUtil;
-import com.yonyou.zbs.common.OkHttpUtil;
+import com.yonyou.zbs.util.JWTTokenUtils;
+import com.yonyou.zbs.util.OkHttpUtils;
 import com.yonyou.zbs.consts.ReturnCode;
 import com.yonyou.zbs.vo.RestResultVO;
 import io.jsonwebtoken.Claims;
@@ -39,13 +39,13 @@ public class AuthInterceptor implements HandlerInterceptor {
             writeJson(httpServletResponse, "无token，请重新登录");
             return false;
         }
-        Claims claims = JWTTokenUtil.verifyToken(token);
+        Claims claims = JWTTokenUtils.verifyToken(token);
         if (claims == null) {
             writeJson(httpServletResponse, "Token无效，请重新登录");
             return false;
         }
         Date expireDate = claims.getExpiration();
-        if (null == expireDate || JWTTokenUtil.isTokenExpired(expireDate)) {
+        if (null == expireDate || JWTTokenUtils.isTokenExpired(expireDate)) {
             writeJson(httpServletResponse, "Token过期了，请重新登录");
             return false;
         }
@@ -58,6 +58,6 @@ public class AuthInterceptor implements HandlerInterceptor {
         RestResultVO<String> vo = new RestResultVO<>();
         vo.setCode(ReturnCode.TOKEN_INVALID.getCode());
         vo.setMsg(s);
-        OkHttpUtil.respJsonToClient(httpServletResponse, JSON.toJSONString(vo));
+        OkHttpUtils.respJsonToClient(httpServletResponse, JSON.toJSONString(vo));
     }
 }

@@ -2,7 +2,7 @@ package com.yonyou.zbs.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.yonyou.zbs.annotation.PassToken;
-import com.yonyou.zbs.common.JWTTokenUtil;
+import com.yonyou.zbs.util.JWTTokenUtils;
 import com.yonyou.zbs.service.BizService;
 import com.yonyou.zbs.vo.PageRespVO;
 import com.yonyou.zbs.vo.RestResultVO;
@@ -38,7 +38,7 @@ public class BizController {
         }
         JSONObject json = new JSONObject();
         json.put("cUserName", map.get("cUserName"));
-        json.put("token", JWTTokenUtil.getToken(userName));
+        json.put("token", JWTTokenUtils.getToken(userName));
         return RestResultVO.success(json);
     }
 

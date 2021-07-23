@@ -1,8 +1,10 @@
 package com.yonyou.zbs.controller;
 
+import com.yonyou.zbs.annotation.PassToken;
 import com.yonyou.zbs.service.SingleBatchService;
 import com.yonyou.zbs.vo.PageRespVO;
 import com.yonyou.zbs.vo.RestResultVO;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,11 +55,6 @@ public class SingleBatchController {
         int id = singleBatchService.temSave(temJson, nurbsJson, userName);
         Map<String, Object> map = new HashMap<>();
         map.put("id", id);
-        try {
-            map.put("pdfUrl", singleBatchService.genSinglePdf(String.valueOf(id)));
-        } catch (Exception e) {
-            return RestResultVO.error("保存错误:" + e.getMessage());
-        }
         return RestResultVO.success(map);
     }
 
@@ -67,7 +64,7 @@ public class SingleBatchController {
     }
 
     @GetMapping(value = "/view")
-    public Object viewSingle(String id) {
+    public Object viewSingle(String id) throws Exception {
         return RestResultVO.success(singleBatchService.viewSinglePdf(id));
     }
 }

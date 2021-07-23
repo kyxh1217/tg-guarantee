@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -74,7 +73,7 @@ public class MultipleBatchController {
     }
 
     @GetMapping(value = "/gen")
-    public Object genMultiPdf(String id) throws IOException {
+    public Object genMultiPdf(String id) throws Exception {
         return RestResultVO.success(multipleBatchService.genMultiPdf(id));
     }
 }

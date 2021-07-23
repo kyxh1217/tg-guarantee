@@ -5,18 +5,19 @@ public interface ZbsConsts {
     String STEEL_TYPE_2 = "2";
     String STEEL_TYPE_3 = "3";
     String STEEL_TYPE_4 = "4";
+    String M_STEEL_ABBR_1 = "TGMY";
     String ZBS_TYPE_M = "M";
     String ZBS_TYPE_S = "S";
     String[] M_HEAD_COLUMNS = new String[]{
             "ID",
             "cNO",
-            "cCertificateNo",
+            "cCertificateNo",// 质保书编号
             "cSign",
-            "cCustomer",
-            "dDate",
-            "cStellGrade",
+            "cCustomer",// 客户名称
+            "dDate",// 日期
+            "cStellGrade",// 钢号
             "cStellGradeW",
-            "cContractNO",
+            "cContractNO",// 和同号
             "cProductName",
             "cStellDesc",
             "cCERTIFICATE",
@@ -33,18 +34,24 @@ public interface ZbsConsts {
             "bupload",
             "cNOTES1",
             "cNOTES2",
-            "cSPECIFICATION"
+            "cSPECIFICATION",// 规格
+            "cStellDesc",// 描述
+            "cGroupName", // 中文工厂名称
+            "enGroupName", // 英文工厂名称
+            "enAddress"// 英文厂址
+
     };
+
     String[] M_BODY_COLUMNS = new String[]{
             "i_id",
             "cNO",
             "millId",
             "cCertificateNo",
-            "cHEATNO",
-            "cSIZES",
-            "Condition",
-            "cPCS",
-            "dWeight",
+            "cHEATNO",// 炉批号
+            "cSIZES",// 规格
+            "Condition",// 条件
+            "cPCS",// 件数
+            "dWeight",// 重量
             "cFields1",
             "cFields2",
             "cFields3",
@@ -83,36 +90,6 @@ public interface ZbsConsts {
             "iSteelType",
             "itype"
     };
-    String[] M_REF_COLUMNS = new String[]{
-            "C",
-            "Si",
-            "Mn",
-            "P",
-            "S",
-            "W",
-            "Mo",
-            "Cr",
-            "V",
-            "Cu",
-            "Ni",
-            "Co",
-            "Al",
-            "Pb",
-            "Sn",
-            "Ti",
-            "B",
-            "Nb",
-            "A_T",
-            "A_H",
-            "B_T",
-            "B_H",
-            "C_T",
-            "C_H",
-            "D_T",
-            "D_H",
-            "cHardness",
-            "cGrainSize"
-    };
     String[] M_ELEMENTS = new String[]{
             "C",
             "Si",
@@ -133,53 +110,7 @@ public interface ZbsConsts {
             "B",
             "Nb"
     };
-    String[] M_REF_COLUMNS_ROUND = new String[]{
-            "C",
-            "Si",
-            "Mn",
-            "P",
-            "S",
-            "W",
-            "Mo",
-            "Cr",
-            "V",
-            "Cu",
-            "Ni",
-            "Co",
-            "Al",
-            "Pb",
-            "Sn",
-            "Ti",
-            "B",
-            "Nb",
-            "A_T",
-            "A_H",
-            "B_T",
-            "B_H",
-            "C_T",
-            "C_H",
-            "D_T",
-            "D_H",
-            "cHardness",
-            "cGrainSize"
-    };
-    String[] M_ELEMENTS_ROUND = new String[]{
-            "C",
-            "Si",
-            "Mn",
-            "P",
-            "S",
-            "Cr",
-            "Mo",
-            "V",
-            "W",
-            "Co",
-            "Cu",
-            "Ni",
-            "H2",
-            "O2",
-            "N2"
-    };
+
     String[] M_NONMETALLIC = new String[]{
             "A_H",
             "A_T",
@@ -190,4 +121,74 @@ public interface ZbsConsts {
             "D_H",
             "D_T"
     };
+
+    interface M1 {
+        String[] HEADER_FIELDS = new String[]{
+                "cCertificateNo",// 质保书编号
+                "cCustomer",// 客户名称
+                "dDate",// 日期
+                "cStellGrade",// 钢号
+                "cContractNO",// 和同号
+                "cSPECIFICATION",// 规格
+                "cStellDesc",// 描述
+                "cGroupName", // 中文工厂名称
+                "enGroupName", // 英文工厂名称
+                "enAddress",// 英文厂址
+                "cNOTES1",
+                "cNOTES2"
+        };
+        String[] BODY_FIELDS = new String[]{
+                "cHEATNO",// 炉批号
+                "cSIZES",// 规格
+                "Condition",// 条件
+                "cPCS",// 件数
+                "dWeight",// 重量
+                "cHardness",// 硬度
+                "cGrainSize"// 颗粒度
+        };
+        String[] REF_FIELDS = new String[]{
+                "C",
+                "Si",
+                "Mn",
+                "P",
+                "S",
+                "Cr",
+                "Mo",
+                "V",
+                "W",
+                "Co",
+                "Cu",
+                "Ni",
+                "H2",
+                "O2",
+                "N2",
+                "A_T",
+                "A_H",
+                "B_T",
+                "B_H",
+                "C_T",
+                "C_H",
+                "D_T",
+                "D_H",
+                "cHardness",
+                "cGrainSize"
+        };
+        String[] ELEMENTS_FIELDS = new String[]{
+                "C",
+                "Si",
+                "Mn",
+                "P",
+                "S",
+                "Cr",
+                "Mo",
+                "V",
+                "W",
+                "Co",
+                "Cu",
+                "Ni",
+                "H2",
+                "O2",
+                "N2"
+        };
+    }
 }
