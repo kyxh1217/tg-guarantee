@@ -3,7 +3,7 @@ package com.yonyou.zbs.util;
 import java.io.IOException;
 import java.util.Properties;
 
-public class SettingsUtils {
+public class ConfigUtils {
     private static int jwtExpire;
 
     private static String jwtSecret;
@@ -15,7 +15,7 @@ public class SettingsUtils {
     static {
         try {
             Properties properties = new Properties();
-            properties.load(SettingsUtils.class.getClassLoader().getResourceAsStream("config/setting.properties"));
+            properties.load(ConfigUtils.class.getClassLoader().getResourceAsStream("setting.properties"));
             jwtExpire = Integer.parseInt(properties.getProperty("jwt.expire", "480"));
             jwtSecret = properties.getProperty("jwt.secret", "www.tggj.cn");
             pdfPath = properties.getProperty("tg.pdf.path", "d:/pdf");

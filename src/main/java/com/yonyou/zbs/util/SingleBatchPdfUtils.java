@@ -65,7 +65,7 @@ public class SingleBatchPdfUtils {
 
         //String pdfName = System.currentTimeMillis() + ".pdf";
         String pdfName = certPrefix + map.get("cCertificateNO") + ".pdf";
-        File pdfFile = new File(SettingsUtils.getPdfPath() + "/" + pdfName);
+        File pdfFile = new File(ConfigUtils.getPdfPath() + "/" + pdfName);
         if (pdfFile.exists() && !pdfFile.canWrite()) {
             throw new IOException("服务器上的文件不可写：" + pdfName);
         }
@@ -133,6 +133,6 @@ public class SingleBatchPdfUtils {
         pdfWriter.close();
         pdfReader.close();
         pdf.close();
-        return SettingsUtils.getPdfUrl() + pdfName;
+        return ConfigUtils.getPdfUrl() + pdfName;
     }
 }

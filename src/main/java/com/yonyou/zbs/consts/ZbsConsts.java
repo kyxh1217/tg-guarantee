@@ -5,7 +5,7 @@ public interface ZbsConsts {
     String STEEL_TYPE_2 = "2";
     String STEEL_TYPE_3 = "3";
     String STEEL_TYPE_4 = "4";
-    String M_STEEL_ABBR_1 = "TGMY";
+
     String ZBS_TYPE_M = "M";
     String ZBS_TYPE_S = "S";
     String[] M_HEAD_COLUMNS = new String[]{
@@ -19,7 +19,6 @@ public interface ZbsConsts {
             "cStellGradeW",
             "cContractNO",// 和同号
             "cProductName",
-            "cStellDesc",
             "cCERTIFICATE",
             "cPROCESS",
             "cDEFORMATION",
@@ -123,6 +122,7 @@ public interface ZbsConsts {
     };
 
     interface M1 {
+        String ABBR = "TGMY";
         String[] HEADER_FIELDS = new String[]{
                 "cCertificateNo",// 质保书编号
                 "cCustomer",// 客户名称
@@ -144,7 +144,30 @@ public interface ZbsConsts {
                 "cPCS",// 件数
                 "dWeight",// 重量
                 "cHardness",// 硬度
-                "cGrainSize"// 颗粒度
+                "cGrainSize",// 颗粒度
+                "A_H",
+                "A_T",
+                "B_H",
+                "B_T",
+                "C_H",
+                "C_T",
+                "D_H",
+                "D_T",
+                "cFields1",
+                "cFields2",
+                "cFields3",
+                "cFields4",
+                "cFields5",
+                "cFields6",
+                "cFields7",
+                "cFields8",
+                "cFields9",
+                "cFields10",
+                "cFields11",
+                "cFields12",
+                "cFields13",
+                "cFields14",
+                "cFields15"
         };
         String[] REF_FIELDS = new String[]{
                 "C",

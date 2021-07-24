@@ -5,7 +5,7 @@ import com.yonyou.zbs.consts.ZbsConsts;
 import com.yonyou.zbs.dao.ZbsDAO;
 import com.yonyou.zbs.service.BizService;
 import com.yonyou.zbs.service.SingleBatchService;
-import com.yonyou.zbs.util.SettingsUtils;
+import com.yonyou.zbs.util.ConfigUtils;
 import com.yonyou.zbs.util.SingleBatchPdfUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -245,7 +245,7 @@ public class SingleBatchServiceImpl implements SingleBatchService {
         if (!pdfFile.exists()) {
             this.genSinglePdf(id);
         }
-        return SettingsUtils.getPdfUrl() + pdfName;
+        return ConfigUtils.getPdfUrl() + pdfName;
     }
 
     private String getPdfName(String id) throws Exception {
@@ -271,7 +271,7 @@ public class SingleBatchServiceImpl implements SingleBatchService {
                 certPrefix = "";
         }
         String pdfName = certPrefix + cCertificateNO + ".pdf";
-        File pdfFile = new File(SettingsUtils.getPdfPath() + "/" + pdfName);
+        File pdfFile = new File(ConfigUtils.getPdfPath() + "/" + pdfName);
         if (!pdfFile.exists()) {
             this.genSinglePdf(id);
         }
@@ -280,7 +280,7 @@ public class SingleBatchServiceImpl implements SingleBatchService {
 
     @Override
     public ResponseEntity<byte[]> download(String id) throws Exception {
-        File file = new File(SettingsUtils.getPdfPath() + "/" + this.getPdfName(id));
+        File file = new File(ConfigUtils.getPdfPath() + "/" + this.getPdfName(id));
         InputStream is = new FileInputStream(file);
         byte[] body = new byte[is.available()];
         is.read(body);

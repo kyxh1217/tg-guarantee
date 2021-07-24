@@ -1,5 +1,6 @@
 package com.yonyou.zbs.util;
 
+import com.alibaba.fastjson.JSON;
 import com.itextpdf.barcodes.BarcodeQRCode;
 import com.itextpdf.barcodes.qrcode.EncodeHintType;
 import com.itextpdf.barcodes.qrcode.ErrorCorrectionLevel;
@@ -16,9 +17,9 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.utils.PdfMerger;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
-import com.yonyou.zbs.consts.ZbsConsts;
 import org.apache.commons.compress.utils.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import javax.imageio.ImageIO;
@@ -31,14 +32,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MultipleBatchPdfUtils {
-    private final static int PDF_PAGE_SIZE = 10;
+import static com.yonyou.zbs.util.CommonTools.findIndex;
+import static com.yonyou.zbs.util.CommonTools.getConstValue;
 
+public class MultipleBatchPdfUtils {
+    private final static Logger logger = LoggerFactory.getLogger(MultipleBatchPdfUtils.class);
+    private final static int PDF_PAGE_SIZE = 10;
+    private static final URL RESOURCE_PATH = MultipleBatchPdfUtils.class.getResource("/static");
 
     public static String genMultiPdf(Map<String, Object> head, Map<String, Object> ref, List<Map<String, Object>> batchList) throws Exception {
         String iSteelType = String.valueOf(head.get("iSteelType"));
@@ -62,22 +66,9 @@ public class MultipleBatchPdfUtils {
         if (CollectionUtils.isEmpty(head)) {
             throw new Exception("表头数据不能为空");
         }
-        String certPrefix;
-        String[] headerFields;
-        String[] bodyFields;
-        String[] refFields;
-        String[] elementFields;
-        if (ZbsConsts.STEEL_TYPE_1.equals(iSteelType)) {
-            certPrefix = ZbsConsts.M_STEEL_ABBR_1;
-            headerFields = ZbsConsts.M1.HEADER_FIELDS;
-            bodyFields = ZbsConsts.M1.BODY_FIELDS;
-            refFields = ZbsConsts.M1.REF_FIELDS;
-            elementFields = ZbsConsts.M1.ELEMENTS_FIELDS;
-        } else {
-            throw new Exception("不支持的模板类型");
-        }
+        long curr = System.currentTimeMillis();
+        String certPrefix = (String) getConstValue(iSteelType, "ABBR");
         InputStream templatePdfIs = null;// 模板的InputStream
-        FileInputStream stampFis = null;
         Document document = null;
         try {
             templatePdfIs = MultipleBatchPdfUtils.class.getClassLoader().getResourceAsStream("pdf/071911.pdf");
@@ -87,116 +78,38 @@ public class MultipleBatchPdfUtils {
             //String pdfName = certPrefix + head.get("cCertificateNo") + ".pdf";
             String pdfName = certPrefix + System.currentTimeMillis() + ".pdf";
             //1、创建pdf文件
-            PdfWriter pdfWriter = new PdfWriter(new FileOutputStream(SettingsUtils.getPdfPath() + "/" + pdfName));
+            PdfWriter pdfWriter = new PdfWriter(new FileOutputStream(ConfigUtils.getPdfPath() + "/" + pdfName));
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(templatePdfIs), pdfWriter);
-            //2、创建字体
-            URL resourcePath = MultipleBatchPdfUtils.class.getResource("/static");
-            if (resourcePath == null) {
-                throw new Exception("找不到字体文件的路径");
-            }
-            PdfFont arial = PdfFontFactory.createFont(resourcePath.getPath() + "/font/arial.ttf", PdfEncodings.IDENTITY_H);
+            //2、创建字体信息并添加到pdf中
+            assert RESOURCE_PATH != null;
+            PdfFont arial = PdfFontFactory.createFont(RESOURCE_PATH.getPath() + "/font/arial.ttf", PdfEncodings.IDENTITY_H);
             pdfDocument.addFont(arial);
-            PdfFont arialbd = PdfFontFactory.createFont(resourcePath.getPath() + "/font/arialbd.ttf", PdfEncodings.IDENTITY_H);
+            PdfFont arialbd = PdfFontFactory.createFont(RESOURCE_PATH.getPath() + "/font/arialbd.ttf", PdfEncodings.IDENTITY_H);
             pdfDocument.addFont(arialbd);
+            // 创建document，A4纸尺寸
             document = new Document(pdfDocument, PageSize.A4.rotate());
             //3、获取pdf模板中的域值信息
             PdfAcroForm form = PdfAcroForm.getAcroForm(pdfDocument, true);
             Map<String, PdfFormField> fieldMap = form.getFormFields();
-            String cCertificateNO = "";
-            // 开始填充表头、页脚的区域
-            for (String key : headerFields) {
-                String value = head.get(key) == null ? null : head.get(key).toString();
-                if (StringUtils.isEmpty(value)) continue;
-                PdfFormField formField = fieldMap.get(key);
-                if (formField == null) continue;
-                if (key.equalsIgnoreCase("cCertificateNo")) {
-                    value = certPrefix + value;
-                }
-                if (key.equalsIgnoreCase("cGroupName")) {
-                    //formField.setFontAndSize(arialbd, 12f);
-                    // Image image = new Image(ImageDataFactory.create(IOUtils.toByteArray(new FileInputStream(resourcePath.getPath() + "/img/tggj_zh.png"))));
-                    // 厂名是中文，老外看到的是乱码，所以要改成图片 1.先用buffed image画出图片。2.将图片转换成byte数组3.名称是否清晰由字体大小，图片长和宽决定
-                    // 生成的图片2.93k，不会占用太多内存
-                    BufferedImage bufferedNameImage = createZhImage(value, "Songti-SC-Bold", 90f, 900, 150);
-                    byte[] nameImageBytes = imageToBytes(bufferedNameImage);
-                    Image nameImage = new Image(ImageDataFactory.create(nameImageBytes));
-                    nameImage.setHeight(30);
-                    nameImage.setWidth(180);
-                    nameImage.setFixedPosition(326, 558);
-                    document.add(nameImage);
-                } else if (key.equalsIgnoreCase("enGroupName")) {
-                    formField.setFontAndSize(arialbd, 6f);
-                } else {
-                    formField.setFontAndSize(arial, 6f);
-                }
-                formField.setValue(value);
-            }
-            for (int i = 0; i < elementFields.length; i++) {
-                PdfFormField formField = fieldMap.get("e" + i);
-                if (formField == null) continue;
-                formField.setValue(elementFields[i], arial, 6f);
-            }
-            List<String> elementList = Arrays.asList(elementFields);
-            if (refs != null) {
-                for (String refKey : refFields) {
-                    String value = refs.get(refKey) == null ? null : refs.get(refKey).toString();
-                    if (StringUtils.isEmpty(value)) continue;
-                    // 判断师是否为元素，如果是元素，就是e0、e1...,否则为原始值
-                    int elementIndex = elementList.indexOf(refKey);
-                    String formFieldName = elementIndex > -1 ? ("e" + elementIndex) : refKey;
-                    PdfFormField formField = fieldMap.get(formFieldName + (value.length() > 8 ? "_ref" : "_sref"));
-                    if (formField == null) continue;
-                    //formField.setFontSizeAutoScale();
-                    formField.setValue(value, arial, 6f);
-                }
-            }
-            if (!CollectionUtils.isEmpty(batchList)) {
-                String[] lineFields = addAll(bodyFields, elementFields, ZbsConsts.M_NONMETALLIC);
-                for (int i = 0; i < batchList.size(); i++) {
-                    Map<String, Object> map = batchList.get(i);
-                    for (String key : lineFields) {
-                        String value = map.get(key) == null ? null : map.get(key).toString();
-                        if (StringUtils.isEmpty(value)) continue;
-                        int elementIndex = elementList.indexOf(key);
-                        String formFieldName = elementIndex > -1 ? ("e" + elementIndex) : key;
-                        PdfFormField formField = fieldMap.get(formFieldName + "_" + i);
-                        if (formField == null) continue;
-                        formField.setValue(value, arial, 6f);
-                    }
-                }
-            }
-            //6、设置文本不可编辑
+            // 处理公用信息
+            String cCertificateNo = doFillHeader(document, fieldMap, arial, arialbd, head, iSteelType);
+            // 处理元素表头
+            doFillElements(fieldMap, arial, iSteelType);
+            // 处理参考数据
+            doFillRefs(fieldMap, arial, refs, iSteelType);
+            doFillBatch(fieldMap, arial, batchList, iSteelType);
+            //设置文本不可编辑
             form.flattenFields();
             // 二维码
-            Map<EncodeHintType, Object> hints = new HashMap<>();
-            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
-            BarcodeQRCode qrcode = new BarcodeQRCode("http://www.tggj.cn/tg/?id=" + cCertificateNO, hints);
-            Image qrImage = new Image(qrcode.createFormXObject(pdfDocument));
-            qrImage.setHeight(100);
-            qrImage.setWidth(100);
-            //image.scaleToFit(50, 50);
-            qrImage.setFixedPosition(712, 108);
-            document.add(qrImage);
+            doQrcodeImage(document, pdfDocument, cCertificateNo);
             // 质检章
-            stampFis = new FileInputStream(resourcePath.getPath() + "/img/tggj.png");
-            Image stampImage = new Image(ImageDataFactory.create(IOUtils.toByteArray(stampFis)));
-            stampImage.setHeight(90);
-            stampImage.setWidth(100);
-            //image.scaleToFit(50, 50);
-            stampImage.setFixedPosition(712, 25);
-            document.add(stampImage);
-            return SettingsUtils.getPdfUrl() + pdfName;
+            doStampImage(document);
+
+            return ConfigUtils.getPdfUrl() + pdfName;
         } finally {
             if (templatePdfIs != null) {
                 try {
                     templatePdfIs.close();
-                } catch (Exception ignored) {
-
-                }
-            }
-            if (stampFis != null) {
-                try {
-                    stampFis.close();
                 } catch (Exception ignored) {
 
                 }
@@ -208,26 +121,148 @@ public class MultipleBatchPdfUtils {
 
                 }
             }
-
+            long end = System.currentTimeMillis();
+            logger.debug("创建pdf开始于：" + curr + ",结束于：" + end + "，耗时：" + (end - curr) + "ms");
         }
 
     }
 
 
+    /**
+     * 填充header、footer等公共区域
+     */
+    private static String doFillHeader(Document document, Map<String, PdfFormField> fieldMap, PdfFont arial, PdfFont arialbd,
+                                       Map<String, Object> head, String iSteelType) throws Exception {
+        String certPrefix = (String) getConstValue(iSteelType, "ABBR");
+        String[] headerFields = (String[]) getConstValue(iSteelType, "HEADER_FIELDS");
+        String cCertificateNo = null;
+        // 开始填充表头、页脚的区域
+        for (String key : headerFields) {
+            Object obj = head.get(key);
+            if (obj == null) continue;
+            PdfFormField formField = fieldMap.get(key);
+            if (formField == null) continue;
+            String value = obj.toString();
+            if (key.equalsIgnoreCase("cCertificateNo")) {
+                cCertificateNo = (value = certPrefix + value);
+            }
+            if (key.equalsIgnoreCase("cGroupName")) {
+                //formField.setFontAndSize(arialbd, 12f);
+                doNameImage(document, value);
+            } else if (key.equalsIgnoreCase("enGroupName")) {
+                formField.setFontAndSize(arialbd, 6f);
+            } else {
+                formField.setFontAndSize(arial, 6f);
+            }
+            formField.setValue(value);
+        }
+        return cCertificateNo;
+    }
+
+    /**
+     * 填充表头里的元素
+     */
+    private static void doFillElements(Map<String, PdfFormField> fieldMap, PdfFont arial, String iSteelType) throws Exception {
+        String[] elementFields = (String[]) getConstValue(iSteelType, "ELEMENTS_FIELDS");
+        assert elementFields != null;
+        for (int i = 0; i < elementFields.length; i++) {
+            PdfFormField formField = fieldMap.get("e" + i);
+            if (formField == null) continue;
+            formField.setValue(elementFields[i], arial, 6f);
+        }
+    }
+
+    /**
+     * 填充参考值
+     */
+    private static void doFillRefs(Map<String, PdfFormField> fieldMap, PdfFont arial, Map<String, Object> refs, String iSteelType) throws Exception {
+        if (CollectionUtils.isEmpty(refs)) return;
+        String[] refFields = (String[]) getConstValue(iSteelType, "REF_FIELDS");
+        String[] elementFields = (String[]) getConstValue(iSteelType, "ELEMENTS_FIELDS");
+        for (String refKey : refFields) {
+            Object obj = refs.get(refKey);
+            if (obj == null) continue;
+            // 判断师是否为元素，如果是元素，就是e0、e1...,否则为原始值
+            int elementIndex = findIndex(elementFields, refKey);
+            String formFieldName = elementIndex > -1 ? ("e" + elementIndex) : refKey;
+            String value = obj.toString();
+            PdfFormField formField = fieldMap.get(formFieldName + (value.length() > 8 ? "_ref" : "_sref"));
+            if (formField == null) continue;
+            //formField.setFontSizeAutoScale();
+            formField.setValue(value, arial, 6f);
+        }
+    }
+
+    /**
+     * 填充批次信息
+     */
+    private static void doFillBatch(Map<String, PdfFormField> fieldMap, PdfFont arial, List<Map<String, Object>> batchList, String iSteelType) throws Exception {
+        if (CollectionUtils.isEmpty(batchList)) return;
+        String[] bodyFields = (String[]) getConstValue(iSteelType, "BODY_FIELDS");
+        for (int i = 0; i < batchList.size(); i++) {
+            Map<String, Object> map = batchList.get(i);
+            for (String key : bodyFields) {
+                Object obj = map.get(key);
+                if (obj == null) continue;
+                PdfFormField formField = fieldMap.get(key + "_" + i);
+                if (formField == null) continue;
+                formField.setValue(obj.toString(), arial, 6f);
+            }
+        }
+    }
+
+    private static void doNameImage(Document document, String value) throws Exception {
+        // 厂名是中文，老外看到的是乱码，所以要改成图片
+        // 1.先用buffed image画出图片。2.将图片转换成byte数组。 3.名称是否清晰由字体大小，图片长和宽决定
+        // 生成的图片2.93k，不会占用太多内存
+        BufferedImage bufferedNameImage = createZhImage(value, "Songti-SC-Bold", 90f, 900, 150);
+        byte[] nameImageBytes = imageToBytes(bufferedNameImage);
+        Image nameImage = new Image(ImageDataFactory.create(nameImageBytes));
+        nameImage.setHeight(30);
+        nameImage.setWidth(180);
+        nameImage.setFixedPosition(326, 558);
+        document.add(nameImage);
+    }
+
+    private static void doQrcodeImage(Document document, PdfDocument pdfDocument, String cCertificateNO) {
+        // 二维码
+        Map<EncodeHintType, Object> hints = new HashMap<>();
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+        BarcodeQRCode qrcode = new BarcodeQRCode("http://www.tggj.cn/tg/?id=" + cCertificateNO, hints);
+        Image qrImage = new Image(qrcode.createFormXObject(pdfDocument));
+        qrImage.setHeight(100);
+        qrImage.setWidth(100);
+        //image.scaleToFit(50, 50);
+        qrImage.setFixedPosition(712, 108);
+        document.add(qrImage);
+    }
+
+    private static void doStampImage(Document document) throws IOException {
+        assert RESOURCE_PATH != null;
+        try (FileInputStream stampFis = new FileInputStream(RESOURCE_PATH.getPath() + "/img/tggj.png")) {
+            Image stampImage = new Image(ImageDataFactory.create(IOUtils.toByteArray(stampFis)));
+            stampImage.setHeight(90);
+            stampImage.setWidth(100);
+            //image.scaleToFit(50, 50);
+            stampImage.setFixedPosition(712, 25);
+            document.add(stampImage);
+        }
+    }
+
     private static String mergePdfFiles(List<String> files) throws IOException {
         String newfile = System.currentTimeMillis() + ".pdf";
-        PdfDocument pdf = new PdfDocument(new PdfWriter(SettingsUtils.getPdfPath() + "/" + newfile));
+        PdfDocument pdf = new PdfDocument(new PdfWriter(ConfigUtils.getPdfPath() + "/" + newfile));
         PdfMerger merger = new PdfMerger(pdf);
         files.forEach(name -> {
             name = name.substring(name.lastIndexOf("/") + 1);
-            try (PdfDocument pdfDocument = new PdfDocument(new PdfReader(SettingsUtils.getPdfPath() + "/" + name))) {
+            try (PdfDocument pdfDocument = new PdfDocument(new PdfReader(ConfigUtils.getPdfPath() + "/" + name))) {
                 merger.merge(pdfDocument, 1, pdfDocument.getNumberOfPages());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
         pdf.close();
-        return SettingsUtils.getPdfUrl() + newfile;
+        return ConfigUtils.getPdfUrl() + newfile;
     }
 
     public static BufferedImage createZhImage(String text, String fontName, float fontSize, int width, int height) throws Exception {
@@ -264,20 +299,6 @@ public class MultipleBatchPdfUtils {
         return baos.toByteArray();
     }
 
-    private static String[] addAll(String[]... args) {
-        if (args == null || args.length == 0) {
-            return null;
-        }
-        int len = Arrays.stream(args).mapToInt(arr -> arr.length).sum();
-        String[] retArr = new String[len];
-        int destPos = 0;
-        for (String[] arg : args) {
-            int argLen = arg.length;
-            System.arraycopy(arg, 0, retArr, destPos, argLen);
-            destPos += argLen;
-        }
-        return retArr;
-    }
 
     public static void main(String[] args) throws Exception {
         Map<String, Object> head = new HashMap<>();
@@ -288,6 +309,7 @@ public class MultipleBatchPdfUtils {
         head.put("cContractNO", "88488848");
         head.put("cSPECIFICATION", "SPECIFICATION ENC 8888888");
         head.put("cStellDesc", "This is the test description");
+        head.put("iSteelType", "1");
         head.put("cGroupName", "江苏天工工具有限公司");
         head.put("enGroupName", "JIANGSU TIANGONG TOOLS COMPANY LIMITED");
         head.put("enAddress", "Danbei Houxiang Town Danyang City Jiangsu Province");
@@ -311,21 +333,21 @@ public class MultipleBatchPdfUtils {
             batchMap.put("dWeight", 1230.5f + i);
             batchMap.put("cHardness", 20 + i);
             batchMap.put("cGrainSize", 10 + i);
-            batchMap.put("C", i + "0.10" + i);
-            batchMap.put("Si", i + "0.10" + i);
-            batchMap.put("Mn", i + "0.10" + i);
-            batchMap.put("P", i + "0.10" + i);
-            batchMap.put("S", i + "0.10" + i);
-            batchMap.put("Cr", i + "0.10" + i);
-            batchMap.put("Mo", i + "0.10" + i);
-            batchMap.put("V", i + "0.10" + i);
-            batchMap.put("W", i + "0.10" + i);
-            batchMap.put("Co", i + "0.10" + i);
-            batchMap.put("Cu", i + "0.10" + i);
-            batchMap.put("Ni", i + "0.10" + i);
-            batchMap.put("H2", i + "0.10" + i);
-            batchMap.put("O2", i + "0.10" + i);
-            batchMap.put("N2", i + "0.10" + i);
+            batchMap.put("cFields1", i + "0.10" + i);
+            batchMap.put("cFields2", i + "0.10" + i);
+            batchMap.put("cFields3", i + "0.10" + i);
+            batchMap.put("cFields4", i + "0.10" + i);
+            batchMap.put("cFields5", i + "0.10" + i);
+            batchMap.put("cFields6", i + "0.10" + i);
+            batchMap.put("cFields7", i + "0.10" + i);
+            batchMap.put("cFields8", i + "0.10" + i);
+            batchMap.put("cFields9", i + "0.10" + i);
+            batchMap.put("cFields10", i + "0.10" + i);
+            batchMap.put("cFields11", i + "0.10" + i);
+            batchMap.put("cFields12", i + "0.10" + i);
+            batchMap.put("cFields13", i + "0.10" + i);
+            batchMap.put("cFields14", i + "0.10" + i);
+            batchMap.put("cFields15", i + "0.10" + i);
             batchMap.put("A_H", i + "1." + i);
             batchMap.put("A_T", i + "1." + i);
             batchMap.put("B_H", i + "1." + i);
@@ -364,5 +386,8 @@ public class MultipleBatchPdfUtils {
         refs.put("D_T", "1.5");
         doMultiPdf(head, refs, batchList, "1");
         // createZhImage("江苏天工工具有限公司", "msyhbd", 18f, 200, 30);
+        System.out.println(JSON.toJSONString(head));
+        System.out.println(JSON.toJSONString(refs));
+        System.out.println(JSON.toJSONString(batchList));
     }
 }

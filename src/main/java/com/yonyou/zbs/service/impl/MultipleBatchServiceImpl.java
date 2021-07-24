@@ -29,8 +29,6 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
     @Resource
     private ZbsDAO zbsDAO;
     @Resource
-    private MultipleBatchPdfUtils multipleBatchPdfUtils;
-    @Resource
     private BizService bizService;
 
     @Override
@@ -163,7 +161,8 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
         Map<String, Object> headMap = zbsDAO.executeQueryMap("SELECT t.ID,t.cCertificateNo,t.cSign,t.cCustomer," +
                 "SUBSTRING(CONVERT(VARCHAR(10),t.dDate,120),1,10) dDate,t.cStellGrade,t.cStellGradeW,t.cContractNO," +
                 "t.cCERTIFICATE,t.cPROCESS,t.cDEFORMATION,t.cGSIZE,t.cDELIVERY,t.cULTRASONIC,t.cDECARBURIZATION,t.cQUALITY," +
-                "t.iSteelType,t.cNOTES1,t.cNOTES2,t.cSPECIFICATION from NccMILLTest t where t.ID=?", id);
+                "t.iSteelType,t.cNOTES1,t.cNOTES2,t.cSPECIFICATION,t.cStellDesc,t.cGroupName,t.enGroupName,t.enAddress" +
+                " from NccMILLTest t where t.ID=?", id);
         List<Map<String, Object>> batchList = zbsDAO.executeQueryList("SELECT t.i_id,t.millId,t.cCertificateNo," +
                 "t.cHEATNO,t.cSIZES,t.cPCS,t.dWeight,t.cFields1,t.cFields2,t.cFields3,t.cFields4,t.cFields5,t.cFields6," +
                 "t.cFields7,t.cFields8,t.cFields9,t.cFields10,t.cFields11,t.cFields12,t.cFields13,t.cFields14,t.cFields15," +
@@ -238,7 +237,7 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
         Map<String, Object> head = (Map<String, Object>) map.get("head");
         Map<String, Object> ref = (Map<String, Object>) map.get("ref");
         List<Map<String, Object>> batchList = (List<Map<String, Object>>) map.get("batchList");
-        return multipleBatchPdfUtils.genMultiPdf(head, ref, batchList);
+        return MultipleBatchPdfUtils.genMultiPdf(head, ref, batchList);
     }
 
     @Override
@@ -315,6 +314,13 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
         return retList;
     }
 
+    @Override
+    public void delMultiById(String id) {
+        zbsDAO.executeUpdate("delete from NccMILLTestDetail where millId=?", id);
+        zbsDAO.executeUpdate("delete from NccMILLRef where millId=?", id);
+        zbsDAO.executeUpdate("delete from NccMILLTest where ID=?", id);
+    }
+
     private int insertBatch(String headForm, String bodyJson, String refJson, String userName) {
         JSONObject head = JSONObject.parseObject(headForm);
         String iSteelType = head.getString("iSteelType");
@@ -337,25 +343,28 @@ public class MultipleBatchServiceImpl implements MultipleBatchService {
         }
         Integer millId = zbsDAO.insert("insert into NccMILLTest (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")", valueList.toArray());
         List<JSONObject> bodyArray = JSONArray.parseArray(bodyJson, JSONObject.class);
-        for (JSONObject body : bodyArray) {
-            keyList = new ArrayList<>();
-            valueList = new ArrayList<>();
-            holderList = new ArrayList<>();
-            for (String key : ZbsConsts.M_BODY_COLUMNS) {
-                if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("i_id")) {
-                    continue;
+        if (!CollectionUtils.isEmpty(bodyArray)) {
+            for (JSONObject body : bodyArray) {
+                keyList = new ArrayList<>();
+                valueList = new ArrayList<>();
+                holderList = new ArrayList<>();
+                for (String key : ZbsConsts.M_BODY_COLUMNS) {
+                    if (key.equalsIgnoreCase("ID") || key.equalsIgnoreCase("i_id")) {
+                        continue;
+                    }
+                    if (key.equalsIgnoreCase("millId")) {
+                        valueList.add(millId);
+                    } else {
+                        valueList.add(body.get(key));
+                    }
+                    keyList.add(key);
+                    holderList.add("?");
                 }
-                if (key.equalsIgnoreCase("millId")) {
-                    valueList.add(millId);
-                } else {
-                    valueList.add(body.get(key));
-                }
-                keyList.add(key);
-                holderList.add("?");
+                zbsDAO.insert("insert into NccMILLTestDetail (" + String.join(",", keyList) + ") values ("
+                        + String.join(",", holderList) + ")", valueList.toArray());
             }
-            zbsDAO.insert("insert into NccMILLTestDetail (" + String.join(",", keyList) + ") values (" + String.join(",", holderList) + ")",
-                    valueList.toArray());
         }
+
         this.insertRef(String.valueOf(millId), iSteelType, refJson);
         return 0;
     }

@@ -18,14 +18,14 @@ public class JWTTokenUtils {
      */
     public static String getToken(String userName) {
         Calendar now = Calendar.getInstance();
-        now.add(Calendar.MINUTE, SettingsUtils.getJwtExpire());
+        now.add(Calendar.MINUTE, ConfigUtils.getJwtExpire());
 
         return Jwts.builder()
                 .setHeaderParam("typ", "JWT")
                 .setSubject(userName)
                 .setIssuedAt(new Date())
                 .setExpiration(now.getTime())
-                .signWith(SignatureAlgorithm.HS256, SettingsUtils.getJwtSecret())
+                .signWith(SignatureAlgorithm.HS256, ConfigUtils.getJwtSecret())
                 .compact();
     }
 
@@ -42,31 +42,10 @@ public class JWTTokenUtils {
     public static Claims verifyToken(String token) {
         try {
             return Jwts.parser()
-                    .setSigningKey(SettingsUtils.getJwtSecret())
+                    .setSigningKey(ConfigUtils.getJwtSecret())
                     .parseClaimsJws(token).getBody();
         } catch (Exception e) {
             return null;
         }
-    }
-
-    public static void main(String[] args) {
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.MINUTE, 480);
-        String encodeRules = "www.tggj.cn";
-        String content = "1234567890";
-        String enstr = SymmetricUtils.AESEncode(encodeRules, content);
-        System.out.println(enstr);
-        String token = Jwts.builder()
-                .setHeaderParam("typ", "JWT")
-                .setSubject("zhangsan")
-                .setIssuedAt(new Date())
-                .setExpiration(now.getTime())
-                .signWith(SignatureAlgorithm.HS256, enstr)
-                .compact();
-        System.out.println(token);
-        Claims claims = Jwts.parser()
-                .setSigningKey(enstr)
-                .parseClaimsJws(token).getBody();
-        System.out.println(claims);
     }
 }

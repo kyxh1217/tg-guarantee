@@ -58,4 +58,6 @@ public interface MultipleBatchService {
     String genPdfFreemarkerM(String id) throws Exception;
 
     List<Map<String, Object>> batchImport(MultipartFile file, String cStellGrade) throws Exception;
+
+    void delMultiById(String id);
 }

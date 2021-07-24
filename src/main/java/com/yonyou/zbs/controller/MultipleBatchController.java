@@ -36,6 +36,12 @@ public class MultipleBatchController {
         return RestResultVO.success(multipleBatchService.getMultiById(id));
     }
 
+    @PostMapping(value = "/del")
+    public Object delMultiById(String id) {
+        multipleBatchService.delMultiById(id);
+        return RestResultVO.success("");
+    }
+
     @GetMapping(value = "/list")
     public Object getMultiByType(String iSteelType, String custName, String startDate, String endDate, String searchText, Integer currPage, Integer pageSize) {
         currPage = null == currPage ? 1 : currPage;
