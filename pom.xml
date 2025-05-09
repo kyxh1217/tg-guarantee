@@ -19,7 +19,7 @@
         <itext7.version>7.1.16</itext7.version>
         <jwt.version>0.9.1</jwt.version>
         <fastjson.version>1.2.76</fastjson.version>
-        <poi.version>5.0.0</poi.version>
+        <poi.version>5.4.0</poi.version>
         <html2pdf.version>3.0.5</html2pdf.version>
     </properties>
 
